@@ -4,7 +4,7 @@ require("dotenv").config();
 // ⚠️ Make sure this name matches the Solidity `contract` name.
 // If your file defines `contract MedicalRecordVault { ... }` then
 // change the line below to artifacts.require("MedicalRecordVault");
-const Vault = artifacts.require("MedicalRecordVaultXRPL");
+const Vault = artifacts.require("MedicalRecordVault");
 
 module.exports = async function (deployer, network, accounts) {
   // 1) Deploy the vault (no constructor args)
