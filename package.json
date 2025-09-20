@@ -1,0 +1,19 @@
+{
+  "name": "flare-x-xrpl-hackathon",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.2"
+  }
+}
