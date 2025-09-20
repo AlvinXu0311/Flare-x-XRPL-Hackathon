@@ -1,0 +1,1165 @@
+
+> xrpl-medical-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+::ffff:127.0.0.1 - - [20/Sep/2025:18:43:05 +0000] "GET /api/health HTTP/1.1" 200 100 "-" "curl/7.81.0"
+📥 Deploy contract request received
+🚀 Starting contract deployment process...
+🚀 Deploying MedicalRecordToken smart contract with progress...
+📋 Deployment wallet: 0x0457A4AaffA8051F20AA37ad179D4B9C09F223a7
+💰 Wallet balance: 99.90379235 FLR
+🚀 Starting real contract deployment to Flare Coston2...
+📊 Deployment progress: config_update - Updating Hardhat configuration...
+📝 Updating Hardhat config with deployment key...
+✅ Hardhat config updated
+📝 Compiling contract with Hardhat...
+📊 Deployment progress: compiling - Compiling smart contract...
+🔨 Running: hardhat compile
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  override existing env vars with { override: true }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  override existing env vars with { override: true }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+📥 Deploy contract request received
+🚀 Starting contract deployment process...
+🚀 Deploying MedicalRecordToken smart contract with progress...
+📋 Deployment wallet: 0x0457A4AaffA8051F20AA37ad179D4B9C09F223a7
+💰 Wallet balance: 99.763744925 FLR
+🚀 Starting real contract deployment to Flare Coston2...
+📊 Deployment progress: config_update - Updating Hardhat configuration...
+📝 Updating Hardhat config with deployment key...
+[32m[nodemon] restarting due to changes...[39m
+✅ Hardhat config updated
+📝 Compiling contract with Hardhat...
+📊 Deployment progress: compiling - Compiling smart contract...
+🔨 Running: hardhat compile
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+SIGINT received, shutting down gracefully...
+🔌 Disconnected from XRPL
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           [32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 version env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 version env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 version env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 version env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+📥 Deploy contract request received
+🚀 Starting contract deployment process...
+🚀 Deploying MedicalRecordToken smart contract with progress...
+📋 Deployment wallet: 0x0457A4AaffA8051F20AA37ad179D4B9C09F223a7
+💰 Wallet balance: 99.763744925 FLR
+🚀 Starting real contract deployment to Flare Coston2...
+📊 Deployment progress: config_update - Updating Hardhat configuration...
+📝 Updating Hardhat config with deployment key...
+[32m[nodemon] restarting due to changes...[39m
+✅ Hardhat config updated
+📝 Compiling contract with Hardhat...
+📊 Deployment progress: compiling - Compiling smart contract...
+🔨 Running: hardhat compile
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.2] injecting env (29) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+⚠️ Flare contract not fully initialized - missing address or private key
+📁 Using local storage mode (MongoDB disabled)
+🚀 Server running on port 3000
+📊 Health check: http://localhost:3000/api/health
+🌍 Environment: development
+📁 S3 configured: true
+💰 S3 bucket: xrpl-medical-records
+🚀 Initializing services...
+✅ XRPL Service initialized
+🌐 Network: wss://s.altnet.rippletest.net:51233
+💰 Platform Wallet: rDQG4QukiGjfkuZEbKWVJDiBbUKdAx8W4m
+✅ Flare Registry Service initialized
+🌐 Network: https://coston2-api.flare.network/ext/bc/C/rpc
+📄 Registry Contract: Not deployed
+✅ All services initialized
+🎉 XRPL Medical Platform backend is ready!

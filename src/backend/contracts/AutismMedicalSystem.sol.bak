@@ -1,0 +1,561 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./interfaces/IFlareContracts.sol";
+
+/**
+ * @title AutismMedicalSystem
+ * @dev Complete autism evaluation management system with insurance integration
+ * Handles ADOS, ADI-R evaluations with insurance payments, tokenization, and diagnosis tracking
+ */
+contract AutismMedicalSystem is ERC721, ERC721URIStorage, AccessControl, ReentrancyGuard {
+    bytes32 public constant INSURANCE_ROLE = keccak256("INSURANCE_ROLE");
+    bytes32 public constant HOSPITAL_ROLE = keccak256("HOSPITAL_ROLE");
+    bytes32 public constant EVALUATOR_ROLE = keccak256("EVALUATOR_ROLE");
+
+    address public immutable smartAccount;
+    IStateConnector public immutable stateConnector;
+    IFtsoRegistry public constant FTSO = IFtsoRegistry(0x00000000000000000000000000000000000003);
+
+    uint256 private _tokenIdCounter;
+
+    // Evaluation types for autism spectrum
+    enum EvaluationType {
+        ADOS,           // Autism Diagnostic Observation Schedule
+        ADIR,           // Autism Diagnostic Interview-Revised
+        CARS,           // Childhood Autism Rating Scale
+        MCHAT,          // Modified Checklist for Autism in Toddlers
+        GARS,           // Gilliam Autism Rating Scale
+        SRS,            // Social Responsiveness Scale
+        ABC,            // Autism Behavior Checklist
+        ASRS            // Autism Spectrum Rating Scales
+    }
+
+    // Diagnosis severity levels (DSM-5)
+    enum SeverityLevel {
+        None,
+        Level1_RequiringSupport,
+        Level2_RequiringSubstantialSupport,
+        Level3_RequiringVerySubstantialSupport
+    }
+
+    struct InsuranceInfo {
+        string insuranceProvider;      // Insurance company name
+        string policyNumber;            // Patient's policy number
+        string groupNumber;             // Group number (if applicable)
+        string memberID;                // Member ID
+        string insuranceXRPL;           // Insurance company XRPL wallet
+        uint256 coveragePercentage;     // Coverage percentage (0-100)
+        uint256 deductible;             // Annual deductible
+        uint256 deductibleMet;          // Amount of deductible already met
+        bool isVerified;                // Insurance verification status
+    }
+
+    struct AutismEvaluation {
+        uint256 tokenId;
+        address patient;
+        address evaluator;              // Professional who conducted evaluation
+        bytes32 fileHash;               // Encrypted file hash
+        string fileLocation;            // S3/IPFS location
+        bytes32 encryptedKey;           // Encrypted access key
+        EvaluationType evaluationType;
+        uint256 evaluationDate;
+        uint256 uploadDate;
+        bool isPaidByInsurance;
+        bytes32 insurancePaymentTx;     // XRPL transaction hash
+        uint256 evaluationCostUSD;
+        InsuranceInfo insurance;
+    }
+
+    struct DiagnosisHistory {
+        uint256[] evaluationTokenIds;   // All evaluation NFT IDs
+        SeverityLevel currentLevel;
+        uint256 firstDiagnosisDate;
+        uint256 lastUpdateDate;
+        string primaryDiagnosis;        // e.g., "299.00 Autistic Disorder"
+        string[] comorbidities;         // Associated conditions
+        mapping(uint256 => DiagnosisUpdate) updates;
+        uint256 updateCount;
+    }
+
+    struct DiagnosisUpdate {
+        uint256 timestamp;
+        SeverityLevel previousLevel;
+        SeverityLevel newLevel;
+        string notes;
+        address updatedBy;
+        uint256 evaluationTokenId;      // Reference evaluation
+    }
+
+    struct AccessRecord {
+        address accessor;               // Hospital/Insurance who accessed
+        uint256 accessTime;
+        string purpose;                 // Reason for access
+        bool isPaid;                    // Whether they paid for access
+        bytes32 paymentTx;              // Payment transaction (if any)
+    }
+
+    struct Bill {
+        bytes32 billId;
+        uint256 evaluationTokenId;
+        address hospital;
+        address patient;
+        string insuranceXRPL;
+        uint256 amountUSD;
+        uint256 insurancePortion;       // Amount insurance will pay
+        uint256 patientPortion;         // Patient responsibility
+        bool isPaid;
+        uint256 createdAt;
+        uint256 paidAt;
+    }
+
+    // State mappings
+    mapping(uint256 => AutismEvaluation) public evaluations;
+    mapping(address => DiagnosisHistory) public patientHistory;
+    mapping(uint256 => AccessRecord[]) public accessHistory;
+    mapping(uint256 => mapping(address => bool)) public hasPaidAccess;
+    mapping(bytes32 => Bill) public medicalBills;
+    mapping(address => bytes32[]) public patientBills;
+    mapping(string => bool) public verifiedInsuranceProviders;
+
+    // Statistics
+    uint256 public totalEvaluations;
+    uint256 public totalInsurancePayments;
+    uint256 public totalDiagnosedPatients;
+
+    // Events
+    event EvaluationUploaded(
+        uint256 indexed tokenId,
+        address indexed patient,
+        EvaluationType evaluationType,
+        bool paidByInsurance
+    );
+
+    event InsurancePaymentProcessed(
+        uint256 indexed tokenId,
+        string insuranceProvider,
+        bytes32 xrplTxHash,
+        uint256 amountUSD
+    );
+
+    event FileAccessGranted(
+        uint256 indexed tokenId,
+        address indexed accessor,
+        string purpose,
+        bool requiresPayment
+    );
+
+    event BillCreated(
+        bytes32 indexed billId,
+        uint256 indexed tokenId,
+        address indexed patient,
+        uint256 totalAmount,
+        uint256 insurancePortion
+    );
+
+    event DiagnosisUpdated(
+        address indexed patient,
+        SeverityLevel newLevel,
+        uint256 evaluationTokenId
+    );
+
+    event AccessHistoryLogged(
+        uint256 indexed tokenId,
+        address indexed accessor,
+        string purpose
+    );
+
+    constructor(
+        address _smartAccount,
+        address _stateConnector
+    ) ERC721("Autism Evaluation NFT", "AEN") {
+        smartAccount = _smartAccount;
+        stateConnector = IStateConnector(_stateConnector);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    /**
+     * @dev Step 1: Upload evaluation with insurance payment
+     */
+    function uploadEvaluationWithInsurance(
+        InsuranceInfo memory insurance,
+        bytes32 fileHash,
+        string memory fileLocation,
+        bytes32 encryptedKey,
+        EvaluationType evaluationType,
+        uint256 evaluationCostUSD,
+        bytes32 insurancePaymentProof
+    ) external nonReentrant returns (uint256 tokenId) {
+        // Verify insurance information
+        require(bytes(insurance.insuranceProvider).length > 0, "Invalid insurance");
+        require(insurance.isVerified || _verifyInsurance(insurance), "Insurance not verified");
+
+        // Verify insurance payment via State Connector
+        require(_verifyInsurancePayment(
+            insurance.insuranceXRPL,
+            evaluationCostUSD,
+            insurancePaymentProof
+        ), "Insurance payment not verified");
+
+        // Mint NFT
+        tokenId = _tokenIdCounter++;
+        _safeMint(msg.sender, tokenId);
+
+        // Store evaluation data
+        AutismEvaluation storage eval = evaluations[tokenId];
+        eval.tokenId = tokenId;
+        eval.patient = msg.sender;
+        eval.fileHash = fileHash;
+        eval.fileLocation = fileLocation;
+        eval.encryptedKey = encryptedKey;
+        eval.evaluationType = evaluationType;
+        eval.evaluationDate = block.timestamp;
+        eval.uploadDate = block.timestamp;
+        eval.isPaidByInsurance = true;
+        eval.insurancePaymentTx = insurancePaymentProof;
+        eval.evaluationCostUSD = evaluationCostUSD;
+        eval.insurance = insurance;
+
+        // Mark as paid by insurance
+        hasPaidAccess[tokenId][address(this)] = true;
+
+        // Update patient history
+        _updatePatientHistory(msg.sender, tokenId);
+
+        totalEvaluations++;
+        totalInsurancePayments++;
+
+        emit EvaluationUploaded(tokenId, msg.sender, evaluationType, true);
+        emit InsurancePaymentProcessed(
+            tokenId,
+            insurance.insuranceProvider,
+            insurancePaymentProof,
+            evaluationCostUSD
+        );
+
+        return tokenId;
+    }
+
+    /**
+     * @dev Step 2: Hospital/Insurance can check and download file
+     */
+    function accessEvaluationFile(
+        uint256 tokenId,
+        string memory purpose
+    ) external nonReentrant returns (
+        string memory fileLocation,
+        bytes32 encryptedKey,
+        bool requiresPayment
+    ) {
+        require(_exists(tokenId), "Token does not exist");
+        require(
+            hasRole(HOSPITAL_ROLE, msg.sender) ||
+            hasRole(INSURANCE_ROLE, msg.sender),
+            "Not authorized"
+        );
+
+        AutismEvaluation storage eval = evaluations[tokenId];
+
+        // Check if already paid (by insurance or previous access)
+        bool alreadyPaid = eval.isPaidByInsurance || hasPaidAccess[tokenId][msg.sender];
+
+        if (!alreadyPaid) {
+            requiresPayment = true;
+            revert("Payment required for access");
+        }
+
+        // Grant access
+        hasPaidAccess[tokenId][msg.sender] = true;
+
+        // Log access
+        AccessRecord memory record = AccessRecord({
+            accessor: msg.sender,
+            accessTime: block.timestamp,
+            purpose: purpose,
+            isPaid: true,
+            paymentTx: eval.insurancePaymentTx
+        });
+
+        accessHistory[tokenId].push(record);
+
+        emit FileAccessGranted(tokenId, msg.sender, purpose, false);
+        emit AccessHistoryLogged(tokenId, msg.sender, purpose);
+
+        return (eval.fileLocation, eval.encryptedKey, false);
+    }
+
+    /**
+     * @dev Step 3: Hospital can bill patient through insurance
+     */
+    function billPatientThroughInsurance(
+        uint256 evaluationTokenId,
+        uint256 serviceAmountUSD,
+        string memory serviceDescription
+    ) external nonReentrant returns (bytes32 billId) {
+        require(hasRole(HOSPITAL_ROLE, msg.sender), "Not a hospital");
+        require(_exists(evaluationTokenId), "Invalid evaluation");
+
+        AutismEvaluation storage eval = evaluations[evaluationTokenId];
+
+        // Calculate insurance coverage
+        uint256 coverageAmount = (serviceAmountUSD * eval.insurance.coveragePercentage) / 100;
+
+        // Consider deductible
+        uint256 remainingDeductible = 0;
+        if (eval.insurance.deductible > eval.insurance.deductibleMet) {
+            remainingDeductible = eval.insurance.deductible - eval.insurance.deductibleMet;
+        }
+
+        uint256 insurancePays = coverageAmount;
+        uint256 patientPays = serviceAmountUSD - coverageAmount;
+
+        if (remainingDeductible > 0) {
+            if (remainingDeductible >= coverageAmount) {
+                patientPays = serviceAmountUSD;
+                insurancePays = 0;
+            } else {
+                patientPays += remainingDeductible;
+                insurancePays -= remainingDeductible;
+            }
+        }
+
+        // Create bill
+        billId = keccak256(abi.encodePacked(
+            evaluationTokenId,
+            msg.sender,
+            serviceAmountUSD,
+            block.timestamp
+        ));
+
+        Bill storage bill = medicalBills[billId];
+        bill.billId = billId;
+        bill.evaluationTokenId = evaluationTokenId;
+        bill.hospital = msg.sender;
+        bill.patient = eval.patient;
+        bill.insuranceXRPL = eval.insurance.insuranceXRPL;
+        bill.amountUSD = serviceAmountUSD;
+        bill.insurancePortion = insurancePays;
+        bill.patientPortion = patientPays;
+        bill.createdAt = block.timestamp;
+
+        patientBills[eval.patient].push(billId);
+
+        // Trigger insurance payment if applicable
+        if (insurancePays > 0) {
+            _processInsuranceBilling(billId, eval.insurance.insuranceXRPL, insurancePays);
+        }
+
+        emit BillCreated(
+            billId,
+            evaluationTokenId,
+            eval.patient,
+            serviceAmountUSD,
+            insurancePays
+        );
+
+        return billId;
+    }
+
+    /**
+     * @dev Step 4: Track diagnosis history for patient
+     */
+    function updateDiagnosis(
+        address patient,
+        uint256 evaluationTokenId,
+        SeverityLevel newLevel,
+        string memory primaryDiagnosis,
+        string[] memory comorbidities,
+        string memory notes
+    ) external {
+        require(hasRole(EVALUATOR_ROLE, msg.sender), "Not authorized evaluator");
+        require(_exists(evaluationTokenId), "Invalid evaluation");
+
+        DiagnosisHistory storage history = patientHistory[patient];
+
+        // First diagnosis
+        if (history.firstDiagnosisDate == 0) {
+            history.firstDiagnosisDate = block.timestamp;
+            totalDiagnosedPatients++;
+        }
+
+        // Store update
+        uint256 updateId = history.updateCount++;
+        DiagnosisUpdate storage update = history.updates[updateId];
+        update.timestamp = block.timestamp;
+        update.previousLevel = history.currentLevel;
+        update.newLevel = newLevel;
+        update.notes = notes;
+        update.updatedBy = msg.sender;
+        update.evaluationTokenId = evaluationTokenId;
+
+        // Update current state
+        history.currentLevel = newLevel;
+        history.lastUpdateDate = block.timestamp;
+        history.primaryDiagnosis = primaryDiagnosis;
+        history.comorbidities = comorbidities;
+
+        emit DiagnosisUpdated(patient, newLevel, evaluationTokenId);
+    }
+
+    /**
+     * @dev Get complete patient diagnosis history
+     */
+    function getPatientDiagnosisHistory(address patient) external view returns (
+        uint256[] memory evaluationTokenIds,
+        SeverityLevel currentLevel,
+        uint256 firstDiagnosisDate,
+        uint256 lastUpdateDate,
+        string memory primaryDiagnosis,
+        string[] memory comorbidities,
+        uint256 totalUpdates
+    ) {
+        DiagnosisHistory storage history = patientHistory[patient];
+
+        return (
+            history.evaluationTokenIds,
+            history.currentLevel,
+            history.firstDiagnosisDate,
+            history.lastUpdateDate,
+            history.primaryDiagnosis,
+            history.comorbidities,
+            history.updateCount
+        );
+    }
+
+    /**
+     * @dev Get specific diagnosis update details
+     */
+    function getDiagnosisUpdate(
+        address patient,
+        uint256 updateIndex
+    ) external view returns (
+        uint256 timestamp,
+        SeverityLevel previousLevel,
+        SeverityLevel newLevel,
+        string memory notes,
+        address updatedBy,
+        uint256 evaluationTokenId
+    ) {
+        DiagnosisUpdate storage update = patientHistory[patient].updates[updateIndex];
+
+        return (
+            update.timestamp,
+            update.previousLevel,
+            update.newLevel,
+            update.notes,
+            update.updatedBy,
+            update.evaluationTokenId
+        );
+    }
+
+    /**
+     * @dev Get access history for an evaluation
+     */
+    function getAccessHistory(uint256 tokenId) external view returns (AccessRecord[] memory) {
+        return accessHistory[tokenId];
+    }
+
+    /**
+     * @dev Get patient's medical bills
+     */
+    function getPatientBills(address patient) external view returns (bytes32[] memory) {
+        return patientBills[patient];
+    }
+
+    /**
+     * @dev Pay medical bill
+     */
+    function payBill(bytes32 billId, bytes32 xrplPaymentTx) external {
+        Bill storage bill = medicalBills[billId];
+        require(!bill.isPaid, "Bill already paid");
+        require(bill.patient == msg.sender, "Not bill owner");
+
+        // Verify payment via State Connector
+        require(_verifyXRPLPayment(xrplPaymentTx, bill.patientPortion), "Payment not verified");
+
+        bill.isPaid = true;
+        bill.paidAt = block.timestamp;
+    }
+
+    // Internal functions
+
+    function _verifyInsurance(InsuranceInfo memory insurance) internal view returns (bool) {
+        // In production, would verify with insurance provider API
+        return verifiedInsuranceProviders[insurance.insuranceProvider];
+    }
+
+    function _verifyInsurancePayment(
+        string memory insuranceXRPL,
+        uint256 amountUSD,
+        bytes32 paymentProof
+    ) internal view returns (bool) {
+        // Use State Connector to verify XRPL payment
+        // Simplified for demonstration
+        return paymentProof != bytes32(0);
+    }
+
+    function _verifyXRPLPayment(
+        bytes32 txHash,
+        uint256 amountUSD
+    ) internal view returns (bool) {
+        // Verify via State Connector
+        return txHash != bytes32(0) && amountUSD > 0;
+    }
+
+    function _updatePatientHistory(address patient, uint256 tokenId) internal {
+        DiagnosisHistory storage history = patientHistory[patient];
+        history.evaluationTokenIds.push(tokenId);
+
+        if (history.firstDiagnosisDate == 0) {
+            history.firstDiagnosisDate = block.timestamp;
+        }
+
+        history.lastUpdateDate = block.timestamp;
+    }
+
+    function _processInsuranceBilling(
+        bytes32 billId,
+        string memory insuranceXRPL,
+        uint256 amountUSD
+    ) internal {
+        // Convert to XRP and initiate payment via SmartAccount
+        uint256 amountDrops = _convertUSDToDrops(amountUSD);
+
+        // In production, would call smartAccount.initiateXRPLPayment
+        // This triggers automated insurance payment
+    }
+
+    function _convertUSDToDrops(uint256 amountUSD) internal view returns (uint256) {
+        (uint256 xrpPrice,, uint256 decimals) = FTSO.getCurrentPriceWithDecimals("XRP");
+        uint256 xrpAmount = (amountUSD * (10 ** decimals)) / xrpPrice;
+        return xrpAmount * 1_000_000; // Convert to drops
+    }
+
+    function _exists(uint256 tokenId) internal view returns (bool) {
+        return evaluations[tokenId].patient != address(0);
+    }
+
+    // Admin functions
+
+    function addVerifiedInsurance(string memory provider) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        verifiedInsuranceProviders[provider] = true;
+    }
+
+    function grantRole(bytes32 role, address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(role, account);
+    }
+
+    // Override functions
+
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl, ERC721URIStorage) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+}

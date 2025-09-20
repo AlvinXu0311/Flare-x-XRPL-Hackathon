@@ -1,0 +1,206 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/**
+ * @title FlareStateConnector
+ * @dev Interface and implementation for Flare Data Connector (FDC) integration
+ * Enables trustless verification of XRPL payments through Flare's State Connector
+ */
+
+interface IStateConnector {
+    struct AttestationRequest {
+        bytes32 attestationType;
+        bytes32 sourceId;
+        bytes requestBody;
+    }
+
+    struct AttestationResponse {
+        bytes32 attestationType;
+        bytes32 sourceId;
+        uint64 votingRound;
+        uint64 lowestUsedTimestamp;
+        bytes requestBody;
+        bytes responseBody;
+    }
+
+    function requestAttestations(AttestationRequest[] calldata requests) external;
+
+    function verifyAttestation(
+        AttestationResponse calldata attestation,
+        bytes32[] calldata merkleProof
+    ) external view returns (bool);
+}
+
+/**
+ * @title XRPLPaymentVerifier
+ * @dev Contract for verifying XRPL payments using Flare State Connector
+ */
+contract XRPLPaymentVerifier {
+    IStateConnector public immutable stateConnector;
+
+    // XRPL-specific constants
+    bytes32 public constant XRPL_SOURCE_ID = 0x58525000000000000000000000000000000000000000000000000000000000; // "XRP" in bytes32
+    bytes32 public constant PAYMENT_ATTESTATION_TYPE = 0x5061796d656e7400000000000000000000000000000000000000000000000000; // "Payment" in bytes32
+
+    struct XRPLPaymentRequest {
+        bytes32 transactionId;    // XRPL transaction hash
+        uint32 inUtxo;           // Input UTXO (0 for XRPL)
+        uint32 utxo;             // Output UTXO (0 for XRPL)
+    }
+
+    struct XRPLPaymentResponse {
+        bytes32 transactionId;           // Transaction hash
+        uint64 blockNumber;              // XRPL ledger number
+        uint64 blockTimestamp;           // Transaction timestamp
+        bytes32 sourceAddress;           // Sender address (padded)
+        bytes32 receivingAddress;        // Receiver address (padded)
+        uint256 receivedAmount;          // Amount in drops
+        bytes32 paymentReference;        // Payment reference (if any)
+        uint8 status;                    // Transaction status
+    }
+
+    // Events
+    event PaymentVerificationRequested(
+        bytes32 indexed transactionId,
+        address indexed requester,
+        uint64 votingRound
+    );
+
+    event PaymentVerified(
+        bytes32 indexed transactionId,
+        address indexed verifier,
+        uint256 amount,
+        bytes32 sourceAddress,
+        bytes32 receivingAddress
+    );
+
+    constructor(address _stateConnector) {
+        stateConnector = IStateConnector(_stateConnector);
+    }
+
+    /**
+     * @dev Request XRPL payment verification from State Connector
+     */
+    function requestPaymentVerification(bytes32 transactionId) external {
+        XRPLPaymentRequest memory request = XRPLPaymentRequest({
+            transactionId: transactionId,
+            inUtxo: 0,
+            utxo: 0
+        });
+
+        IStateConnector.AttestationRequest memory attestationRequest = IStateConnector.AttestationRequest({
+            attestationType: PAYMENT_ATTESTATION_TYPE,
+            sourceId: XRPL_SOURCE_ID,
+            requestBody: abi.encode(request)
+        });
+
+        IStateConnector.AttestationRequest[] memory requests = new IStateConnector.AttestationRequest[](1);
+        requests[0] = attestationRequest;
+
+        stateConnector.requestAttestations(requests);
+
+        // Note: In real implementation, you'd get the voting round from the State Connector
+        emit PaymentVerificationRequested(transactionId, msg.sender, 0);
+    }
+
+    /**
+     * @dev Verify XRPL payment with Flare attestation
+     */
+    function verifyXRPLPayment(
+        bytes32 transactionId,
+        uint256 expectedAmount,
+        bytes32 expectedDestination,
+        IStateConnector.AttestationResponse calldata attestation,
+        bytes32[] calldata merkleProof
+    ) external view returns (bool isValid, XRPLPaymentResponse memory paymentData) {
+        // Verify attestation through State Connector
+        require(stateConnector.verifyAttestation(attestation, merkleProof), "Invalid attestation");
+
+        // Decode payment response
+        paymentData = abi.decode(attestation.responseBody, (XRPLPaymentResponse));
+
+        // Verify transaction details
+        require(paymentData.transactionId == transactionId, "Transaction ID mismatch");
+        require(paymentData.receivingAddress == expectedDestination, "Destination mismatch");
+        require(paymentData.receivedAmount >= expectedAmount, "Insufficient amount");
+        require(paymentData.status == 1, "Transaction failed"); // 1 = successful
+
+        isValid = true;
+        return (isValid, paymentData);
+    }
+
+    /**
+     * @dev Simplified verification for testing (without merkle proof)
+     */
+    function verifyPaymentSimple(
+        bytes32 transactionId,
+        uint256 expectedAmount,
+        bytes32 expectedDestination,
+        bytes calldata encodedResponse
+    ) external pure returns (bool isValid, XRPLPaymentResponse memory paymentData) {
+        // Decode payment response
+        paymentData = abi.decode(encodedResponse, (XRPLPaymentResponse));
+
+        // Verify transaction details
+        isValid = (
+            paymentData.transactionId == transactionId &&
+            paymentData.receivingAddress == expectedDestination &&
+            paymentData.receivedAmount >= expectedAmount &&
+            paymentData.status == 1
+        );
+
+        return (isValid, paymentData);
+    }
+
+    /**
+     * @dev Convert XRPL address to bytes32 (for testing)
+     */
+    function addressToBytes32(string memory xrplAddress) external pure returns (bytes32) {
+        bytes memory addressBytes = bytes(xrplAddress);
+        require(addressBytes.length <= 32, "Address too long");
+
+        bytes32 result;
+        assembly {
+            result := mload(add(addressBytes, 32))
+        }
+        return result;
+    }
+
+    /**
+     * @dev Convert bytes32 to XRPL address string (for testing)
+     */
+    function bytes32ToString(bytes32 data) external pure returns (string memory) {
+        bytes memory bytesArray = new bytes(32);
+        for (uint256 i = 0; i < 32; i++) {
+            bytesArray[i] = data[i];
+        }
+        return string(bytesArray);
+    }
+}
+
+/**
+ * @title MockStateConnector
+ * @dev Mock implementation for testing purposes
+ */
+contract MockStateConnector is IStateConnector {
+    mapping(bytes32 => bool) public verifiedAttestations;
+
+    function requestAttestations(AttestationRequest[] calldata) external override {
+        // Mock implementation - does nothing
+    }
+
+    function verifyAttestation(
+        AttestationResponse calldata attestation,
+        bytes32[] calldata
+    ) external view override returns (bool) {
+        // For testing, always return true if transaction hash exists
+        XRPLPaymentVerifier.XRPLPaymentResponse memory response =
+            abi.decode(attestation.responseBody, (XRPLPaymentVerifier.XRPLPaymentResponse));
+
+        return response.transactionId != bytes32(0);
+    }
+
+    function setVerifiedAttestation(bytes32 attestationHash, bool verified) external {
+        verifiedAttestations[attestationHash] = verified;
+    }
+}
