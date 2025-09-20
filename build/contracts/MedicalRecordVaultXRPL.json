@@ -43908,6 +43908,413 @@
     "version": "0.8.21+commit.d9974bed.Emscripten.clang"
   },
   "networks": {
+    "114": {
+      "events": {
+        "0x182fa52899142d44ff5c45a6354d3b3e868d5b07db6a65580b39bd321bdaf8ac": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "patientId",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "insurer",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "Deposit",
+          "type": "event"
+        },
+        "0x074f075979d9759e37d7ae44786a6bc14281a51cd89a11a7efe7d94b8d98cb92": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "patientId",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint8",
+              "name": "kind",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "accessor",
+              "type": "address"
+            }
+          ],
+          "name": "DocumentRead",
+          "type": "event"
+        },
+        "0x06f6b1bfeb5b4ec123686e3e99b88f31ea983f9a90ad9ba8bf10f0fb29b47af4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "patientId",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint8",
+              "name": "kind",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "hashURI",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "version",
+              "type": "uint256"
+            }
+          ],
+          "name": "DocumentUploaded",
+          "type": "event"
+        },
+        "0xb13b6897f1078ad5cac6d8c947da22bcddc0cec9601e74d580711a8830a1abf6": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "fdc",
+              "type": "address"
+            }
+          ],
+          "name": "FdcSet",
+          "type": "event"
+        },
+        "0x660e7095066fd91b05cfad0851f3cefa62b4a62de319c3c13ef7db8982e78501": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "feeWei",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "feeUSDc",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "collector",
+              "type": "address"
+            }
+          ],
+          "name": "FeesUpdated",
+          "type": "event"
+        },
+        "0x78bf9ee573ab4ba0b227ab30e4d583f41e8312c1d584c36833c12d40e56d4364": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "ftso",
+              "type": "address"
+            }
+          ],
+          "name": "FtsoSet",
+          "type": "event"
+        },
+        "0x8a6e856b2fab550a4c0c3f7a8b9efd3e0326dbb5b5d44a42fba4cb735c181b31": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "patientId",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "guardian",
+              "type": "address"
+            }
+          ],
+          "name": "GuardianSet",
+          "type": "event"
+        },
+        "0x58759f6892baf88a17d4d0c1f5b3f08758cd8da2f0f826688c424288f3b5cad3": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "patientId",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "insurer",
+              "type": "address"
+            }
+          ],
+          "name": "InsurerSet",
+          "type": "event"
+        },
+        "0xc99d8d2e9b8e595659e512077075a3ee2a077600f9cd7f66fccc984ef9352746": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "price",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint8",
+              "name": "decimals",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            }
+          ],
+          "name": "OracleParams",
+          "type": "event"
+        },
+        "0x6b25cf17c118911f118f91dff57adc2ad6e5ecee484181db518ddc86b9f6276b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "maxStalenessSeconds",
+              "type": "uint256"
+            }
+          ],
+          "name": "OracleStalenessUpdated",
+          "type": "event"
+        },
+        "0x9bf5c7e7f912df9e1794b3fd8e5091ba871a1e082b3d965ad689b6c6982a5682": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "patientId",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "psychologist",
+              "type": "address"
+            }
+          ],
+          "name": "PsychologistSet",
+          "type": "event"
+        },
+        "0xc17c5ee9c0cd27e2f22075876524827ee7b6efe1ebbbd8ca7b87efd3a721da1f": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "patientId",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "who",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "bool",
+              "name": "allowed",
+              "type": "bool"
+            }
+          ],
+          "name": "ReadAccessGranted",
+          "type": "event"
+        },
+        "0x96c619c6279880ef0bdf34f43a4773c451716b194849307836486cd77717d31b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "patientId",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint8",
+              "name": "kind",
+              "type": "uint8"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "insurer",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "version",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amountWei",
+              "type": "uint256"
+            }
+          ],
+          "name": "UploadPaidFLR",
+          "type": "event"
+        },
+        "0xf6c3f8b09e4eb5edebf738a67866ad844c4aa02a23ece7f0fb434f684e78773f": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "patientId",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint8",
+              "name": "kind",
+              "type": "uint8"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "insurer",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "version",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "paidUSDc",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "proofHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "currencyHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "UploadPaidXRPLAny",
+          "type": "event"
+        },
+        "0x6f169f2460122d67bd49ad1d3130d3f76c39bf16ce6f4384785da306578f706f": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "patientId",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint8",
+              "name": "kind",
+              "type": "uint8"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "insurer",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "version",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "paidDrops",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "proofHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "UploadPaidXRPLXRP",
+          "type": "event"
+        },
+        "0x884edad9ce6fa2440d8a54cc123490eb96d2768479d49ff9c7366125a9424364": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "Withdraw",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x6cd4FEb053E613dF60CF10f0DD1D9597051D241B",
+      "transactionHash": "0x7c3b6fefa22c379e3789657a9db23f4f61c94945d3917c9ac682bc79609c8829"
+    },
     "31337": {
       "events": {
         "0x182fa52899142d44ff5c45a6354d3b3e868d5b07db6a65580b39bd321bdaf8ac": {
@@ -44317,7 +44724,7 @@
     }
   },
   "schemaVersion": "3.4.16",
-  "updatedAt": "2025-09-20T21:59:54.202Z",
+  "updatedAt": "2025-09-20T22:54:40.409Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
