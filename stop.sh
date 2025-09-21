@@ -297,6 +297,20 @@ cleanup_files() {
             print_status "Cleared backend cache"
             cleaned=true
         fi
+
+        # Clean contract artifacts
+        if [ -d "build" ]; then
+            rm -rf build
+            print_status "Removed contract build artifacts"
+            cleaned=true
+        fi
+
+        # Clean truffle cache
+        if [ -d ".truffle" ]; then
+            rm -rf .truffle
+            print_status "Cleared truffle cache"
+            cleaned=true
+        fi
     fi
 
     if [ "$cleaned" = true ]; then

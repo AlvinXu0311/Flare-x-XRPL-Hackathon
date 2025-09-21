@@ -6,8 +6,8 @@
    GET  /api/mappings/wallet/:address - Get by wallet
    GET  /api/mappings/tx/:hash - Get by transaction
    GET  /api/health - Health check
-✅ Document mapping stored: 0x376a9eec3907c622f98e1e6888cab6d5160275c7fff93330b13aa5e25e1da74b -> System-design.docx
-Deleted mapping for transaction: 0x376a9eec3907c622f98e1e6888cab6d5160275c7fff93330b13aa5e25e1da74b
-Cleared 9 mappings for wallet: 0x0457a4aaffa8051f20aa37ad179d4b9c09f223a7
+✅ Document mapping stored: 0x51614450fe5d9118f53893fb414a90cec4da6b546478f2efb69c4e895ac9b605 -> System-design.docx
+✅ Document mapping stored: 0x84df4ccea187c26a36e820129e7e3b2f242e38981b3b9b5ea7f753be17ce5ca3 -> System-design.docx
+Cleared 10 mappings for wallet: 0x0457a4aaffa8051f20aa37ad179d4b9c09f223a7
 🛑 Shutting down gracefully...
 ✅ Database connection closed

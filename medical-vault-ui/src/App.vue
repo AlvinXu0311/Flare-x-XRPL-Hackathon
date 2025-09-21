@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import { ethers } from 'ethers'
 import DocumentUpload from './components/DocumentUpload.vue'
 import DocumentDownload from './components/DocumentDownload.vue'
+import HospitalPortal from './components/HospitalPortal.vue'
+import SmartAccountWallet from './components/SmartAccountWallet.vue'
 // import RoleSetup from './components/RoleSetup.vue'
 import MedicalVaultABI from '@/assets/MedicalVault.json'
 import { connectToMetaMask, switchToCoston2, isMetaMaskInstalled, getConnectedAccounts } from '@/utils/wallet'
@@ -11,7 +13,7 @@ import { connectBasic, switchToCoston2Basic } from '@/utils/wallet-basic'
 // import { initializeContractEvents, destroyContractEvents } from '@/utils/contract-events'
 
 // Reactive state
-const currentView = ref('upload') // 'upload', 'download', 'setup'
+const currentView = ref('upload') // 'upload', 'download', 'hospital', 'setup'
 const isConnected = ref(false)
 const account = ref('')
 const chainId = ref(0)
@@ -183,7 +185,7 @@ onMounted(async () => {
     <!-- Header with Navigation -->
     <header class="app-header">
       <div class="header-content">
-        <h1>🏥 Medical Vault</h1>
+        <h1>Medical Vault</h1>
 
         <!-- Navigation -->
         <nav class="main-nav">
@@ -192,14 +194,28 @@ onMounted(async () => {
             :class="{ active: currentView === 'upload' }"
             class="nav-btn"
           >
-            📤 Upload Document
+            Upload Document
           </button>
           <button
             @click="currentView = 'download'"
             :class="{ active: currentView === 'download' }"
             class="nav-btn"
           >
-            📥 Download Document
+            Download Document
+          </button>
+          <button
+            @click="currentView = 'hospital'"
+            :class="{ active: currentView === 'hospital' }"
+            class="nav-btn hospital-btn"
+          >
+            Hospital Portal
+          </button>
+          <button
+            @click="currentView = 'wallet'"
+            :class="{ active: currentView === 'wallet' }"
+            class="nav-btn wallet-btn"
+          >
+            💼 Smart Wallet
           </button>
           <!-- <button
             @click="currentView = 'setup'"
@@ -218,18 +234,18 @@ onMounted(async () => {
               :disabled="isConnecting"
               class="connect-wallet-btn"
             >
-              {{ isConnecting ? '⏳ Connecting...' : '🔗 Connect Wallet' }}
+              {{ isConnecting ? 'Connecting...' : 'Connect Wallet' }}
             </button>
           </div>
           <div v-else class="wallet-connected">
             <div class="wallet-info">
               <span class="account">{{ account.slice(0, 6) }}...{{ account.slice(-4) }}</span>
               <span class="network" :class="{ incorrect: !isCorrectNetwork }">
-                {{ isCorrectNetwork ? '✅ Coston2' : '❌ Wrong Network' }}
+                {{ isCorrectNetwork ? 'Coston2' : 'Wrong Network' }}
               </span>
             </div>
             <button v-if="!isCorrectNetwork" @click="switchNetwork" class="switch-network-btn">
-              🔄 Switch to Coston2
+              Switch to Coston2
             </button>
           </div>
         </div>
@@ -241,7 +257,7 @@ onMounted(async () => {
       <!-- Connection Required Notice -->
       <div v-if="!isConnected" class="connection-notice">
         <div class="notice-content">
-          <h2>🔐 Wallet Connection Required</h2>
+          <h2>Wallet Connection Required</h2>
           <p>Please connect your MetaMask wallet to access the Medical Vault.</p>
           <button
             @click="connectWallet"
@@ -256,7 +272,7 @@ onMounted(async () => {
       <!-- Wrong Network Notice -->
       <div v-else-if="!isCorrectNetwork" class="network-notice">
         <div class="notice-content">
-          <h2>🌐 Wrong Network</h2>
+          <h2>Wrong Network</h2>
           <p>Please switch to the Coston2 network to use the Medical Vault.</p>
           <button @click="switchNetwork" class="switch-btn-large">
             Switch to Coston2 Network
@@ -267,7 +283,7 @@ onMounted(async () => {
       <!-- Contract Address Missing -->
       <div v-else-if="!VAULT_ADDRESS" class="contract-notice">
         <div class="notice-content">
-          <h2>⚙️ Configuration Required</h2>
+          <h2>Configuration Required</h2>
           <p>Please set the VITE_VAULT_ADDRESS in your .env file.</p>
           <code>.env file: VITE_VAULT_ADDRESS=0x...</code>
         </div>
@@ -291,6 +307,22 @@ onMounted(async () => {
           :isConnected="isConnected"
         />
 
+        <!-- Hospital Portal -->
+        <HospitalPortal
+          v-if="currentView === 'hospital'"
+          :account="account"
+          :contract="contract"
+          :isConnected="isConnected"
+        />
+
+        <!-- Smart Account Wallet -->
+        <SmartAccountWallet
+          v-if="currentView === 'wallet'"
+          :account="account"
+          :isConnected="isConnected"
+        />
+
+
         <!-- Role Setup - Commented out for IPFS-only mode -->
         <!--
         <RoleSetup
@@ -305,7 +337,7 @@ onMounted(async () => {
 
     <!-- Footer -->
     <footer class="app-footer">
-      <p>🔒 Secure Medical Records on Flare Network | Built with Vue.js & Ethers.js</p>
+      <p>Secure Medical Records on Flare Network | Built with Vue.js & Ethers.js</p>
     </footer>
   </div>
 </template>
@@ -388,18 +420,47 @@ body {
   border-color: #2980b9;
 }
 
-.setup-btn {
+.hospital-btn {
   background: #e67e22 !important;
   color: white !important;
 }
 
-.setup-btn:hover {
+.hospital-btn:hover {
   background: #d35400 !important;
 }
 
-.setup-btn.active {
+.hospital-btn.active {
   background: #d35400 !important;
   border-color: #a0522d !important;
+}
+
+
+.setup-btn {
+  background: #8e44ad !important;
+  color: white !important;
+}
+
+.setup-btn:hover {
+  background: #7d3c98 !important;
+}
+
+.setup-btn.active {
+  background: #7d3c98 !important;
+  border-color: #6c3483 !important;
+}
+
+.wallet-btn {
+  background: #9b59b6 !important;
+  color: white !important;
+}
+
+.wallet-btn:hover {
+  background: #8e44ad !important;
+}
+
+.wallet-btn.active {
+  background: #8e44ad !important;
+  border-color: #7d3c98 !important;
 }
 
 /* Wallet Status Styles */

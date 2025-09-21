@@ -237,3 +237,10 @@ class MappingService {
 // Export singleton instance
 export const mappingService = new MappingService()
 export type { DocumentMapping, MappingResponse }
+
+// Extend window object for global cache access
+declare global {
+  interface Window {
+    mappingServiceCache?: Map<string, any>
+  }
+}

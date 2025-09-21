@@ -24,6 +24,7 @@ A **fully decentralized** medical records management system built on **Flare Net
 - **IPFS Storage** - Files distributed across global network
 - **Blockchain Metadata** - Immutable record on Flare Network
 - **Multiple Access Points** - Available via any IPFS gateway
+- **Simple Interface** - Upload documents, download documents, and hospital portal
 
 ### 🛡️ **Security & Privacy**
 - **Client-Side Encryption** - AES-256-GCM encryption in browser
@@ -176,8 +177,8 @@ npx hardhat run scripts/deploy.js --network flare
 ### **For Patients**
 1. **Connect Wallet** - Use MetaMask or compatible wallet
 2. **Upload Documents** - Encrypt and store medical records
-3. **Grant Access** - Give permissions to healthcare providers
-4. **Manage Data** - View, download, and control your records
+3. **Download Documents** - Retrieve and decrypt your medical records
+4. **Hospital Portal** - Access specialized hospital interface
 
 ### **For Healthcare Providers**
 1. **Register** - Create provider account with credentials

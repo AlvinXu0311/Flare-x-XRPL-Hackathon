@@ -1,0 +1,1025 @@
+{
+  "contractName": "IFdcHub",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "attestationType",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "sourceId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes",
+              "name": "requestBody",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "fee",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IFdcHub.AttestationRequest",
+          "name": "_request",
+          "type": "tuple"
+        }
+      ],
+      "name": "requestAttestation",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_attestationType",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getAttestationFee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.21+commit.d9974bed\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_attestationType\",\"type\":\"bytes32\"}],\"name\":\"getAttestationFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"attestationType\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"sourceId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"requestBody\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"fee\",\"type\":\"uint256\"}],\"internalType\":\"struct IFdcHub.AttestationRequest\",\"name\":\"_request\",\"type\":\"tuple\"}],\"name\":\"requestAttestation\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"payable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"getAttestationFee(bytes32)\":{\"params\":{\"_attestationType\":\"The attestation type\"},\"returns\":{\"_0\":\"Required fee amount\"}},\"requestAttestation((bytes32,bytes32,bytes,uint256))\":{\"params\":{\"_request\":\"The attestation request\"},\"returns\":{\"_0\":\"Request ID\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"getAttestationFee(bytes32)\":{\"notice\":\"Get attestation fee for a specific type\"},\"requestAttestation((bytes32,bytes32,bytes,uint256))\":{\"notice\":\"Submit an attestation request\"}},\"notice\":\"Real Flare FDC Hub Interface\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/FlareContractRegistry.sol\":\"IFdcHub\"},\"evmVersion\":\"shanghai\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/FlareContractRegistry.sol\":{\"keccak256\":\"0xb80d6613da220105b837b25a41e03bcd9d21b2e44f68c400ff76a51011a89cf7\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://62d449d3405cb3ad5c572b724700d2632c6f1e3ee2eb1416bcb5f98f5320a34a\",\"dweb:/ipfs/QmdmsubnVGdRZifkaG8MinEpkq8WuAnAJc87SHNS7fFJKW\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.21;\n\n/**\n * Interface for Flare Contract Registry\n * Registry address is the same on all Flare networks: 0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019\n */\ninterface IFlareContractRegistry {\n    /**\n     * Returns contract address for the given name, or zero address if contract does not exist.\n     * @param _name             Contract name\n     * @return                  Contract address\n     */\n    function getContractAddressByName(string calldata _name) external view returns (address);\n\n    /**\n     * Returns contract address for the given name hash, or zero address if contract does not exist.\n     * @param _nameHash         Contract name hash\n     * @return                  Contract address\n     */\n    function getContractAddressByHash(bytes32 _nameHash) external view returns (address);\n\n    /**\n     * Returns all contract names and corresponding addresses.\n     * @return _names           Contract names\n     * @return _addresses       Contract addresses\n     */\n    function getAllContracts() external view returns (string[] memory _names, address[] memory _addresses);\n}\n\n/**\n * Real Flare FDC Hub Interface\n */\ninterface IFdcHub {\n    struct AttestationRequest {\n        bytes32 attestationType;\n        bytes32 sourceId;\n        bytes requestBody;\n        uint256 fee;\n    }\n\n    /**\n     * Submit an attestation request\n     * @param _request          The attestation request\n     * @return                  Request ID\n     */\n    function requestAttestation(AttestationRequest calldata _request) external payable returns (bytes32);\n\n    /**\n     * Get attestation fee for a specific type\n     * @param _attestationType  The attestation type\n     * @return                  Required fee amount\n     */\n    function getAttestationFee(bytes32 _attestationType) external view returns (uint256);\n}\n\n/**\n * Real Flare FDC Verification Interface\n */\ninterface IFdcVerification {\n    struct Proof {\n        bytes32 merkleRoot;\n        bytes32[] merkleProof;\n        bytes data;\n    }\n\n    /**\n     * Verify attestation proof\n     * @param _proof            The proof data\n     * @return                  True if verification succeeds\n     */\n    function verifyAttestation(Proof calldata _proof) external view returns (bool);\n}",
+  "sourcePath": "/usr/Flare-x-XRPL-Hackathon/contracts/FlareContractRegistry.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/FlareContractRegistry.sol",
+    "exportedSymbols": {
+      "IFdcHub": [
+        57
+      ],
+      "IFdcVerification": [
+        76
+      ],
+      "IFlareContractRegistry": [
+        29
+      ]
+    },
+    "id": 77,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".21"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "32:24:0"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IFlareContractRegistry",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 2,
+          "nodeType": "StructuredDocumentation",
+          "src": "58:146:0",
+          "text": " Interface for Flare Contract Registry\n Registry address is the same on all Flare networks: 0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019"
+        },
+        "fullyImplemented": false,
+        "id": 29,
+        "linearizedBaseContracts": [
+          29
+        ],
+        "name": "IFlareContractRegistry",
+        "nameLocation": "215:22:0",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 3,
+              "nodeType": "StructuredDocumentation",
+              "src": "244:202:0",
+              "text": " Returns contract address for the given name, or zero address if contract does not exist.\n @param _name             Contract name\n @return                  Contract address"
+            },
+            "functionSelector": "82760fca",
+            "id": 10,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getContractAddressByName",
+            "nameLocation": "460:24:0",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 5,
+                  "mutability": "mutable",
+                  "name": "_name",
+                  "nameLocation": "501:5:0",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10,
+                  "src": "485:21:0",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_string_calldata_ptr",
+                    "typeString": "string"
+                  },
+                  "typeName": {
+                    "id": 4,
+                    "name": "string",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "485:6:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_string_storage_ptr",
+                      "typeString": "string"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "484:23:0"
+            },
+            "returnParameters": {
+              "id": 9,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 8,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10,
+                  "src": "531:7:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 7,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "531:7:0",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "530:9:0"
+            },
+            "scope": 29,
+            "src": "451:89:0",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 11,
+              "nodeType": "StructuredDocumentation",
+              "src": "546:212:0",
+              "text": " Returns contract address for the given name hash, or zero address if contract does not exist.\n @param _nameHash         Contract name hash\n @return                  Contract address"
+            },
+            "functionSelector": "159354a2",
+            "id": 18,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getContractAddressByHash",
+            "nameLocation": "772:24:0",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 14,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 13,
+                  "mutability": "mutable",
+                  "name": "_nameHash",
+                  "nameLocation": "805:9:0",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 18,
+                  "src": "797:17:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 12,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "797:7:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "796:19:0"
+            },
+            "returnParameters": {
+              "id": 17,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 16,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 18,
+                  "src": "839:7:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 15,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "839:7:0",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "838:9:0"
+            },
+            "scope": 29,
+            "src": "763:85:0",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 19,
+              "nodeType": "StructuredDocumentation",
+              "src": "854:172:0",
+              "text": " Returns all contract names and corresponding addresses.\n @return _names           Contract names\n @return _addresses       Contract addresses"
+            },
+            "functionSelector": "18d3ce96",
+            "id": 28,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getAllContracts",
+            "nameLocation": "1040:15:0",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 20,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1055:2:0"
+            },
+            "returnParameters": {
+              "id": 27,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 23,
+                  "mutability": "mutable",
+                  "name": "_names",
+                  "nameLocation": "1097:6:0",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 28,
+                  "src": "1081:22:0",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_string_memory_ptr_$dyn_memory_ptr",
+                    "typeString": "string[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 21,
+                      "name": "string",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "1081:6:0",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_string_storage_ptr",
+                        "typeString": "string"
+                      }
+                    },
+                    "id": 22,
+                    "nodeType": "ArrayTypeName",
+                    "src": "1081:8:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_string_storage_$dyn_storage_ptr",
+                      "typeString": "string[]"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 26,
+                  "mutability": "mutable",
+                  "name": "_addresses",
+                  "nameLocation": "1122:10:0",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 28,
+                  "src": "1105:27:0",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 24,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "1105:7:0",
+                      "stateMutability": "nonpayable",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 25,
+                    "nodeType": "ArrayTypeName",
+                    "src": "1105:9:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1080:53:0"
+            },
+            "scope": 29,
+            "src": "1031:103:0",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 77,
+        "src": "205:931:0",
+        "usedErrors": [],
+        "usedEvents": []
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IFdcHub",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 30,
+          "nodeType": "StructuredDocumentation",
+          "src": "1138:39:0",
+          "text": " Real Flare FDC Hub Interface"
+        },
+        "fullyImplemented": false,
+        "id": 57,
+        "linearizedBaseContracts": [
+          57
+        ],
+        "name": "IFdcHub",
+        "nameLocation": "1188:7:0",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "canonicalName": "IFdcHub.AttestationRequest",
+            "id": 39,
+            "members": [
+              {
+                "constant": false,
+                "id": 32,
+                "mutability": "mutable",
+                "name": "attestationType",
+                "nameLocation": "1246:15:0",
+                "nodeType": "VariableDeclaration",
+                "scope": 39,
+                "src": "1238:23:0",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bytes32",
+                  "typeString": "bytes32"
+                },
+                "typeName": {
+                  "id": 31,
+                  "name": "bytes32",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "1238:7:0",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 34,
+                "mutability": "mutable",
+                "name": "sourceId",
+                "nameLocation": "1279:8:0",
+                "nodeType": "VariableDeclaration",
+                "scope": 39,
+                "src": "1271:16:0",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bytes32",
+                  "typeString": "bytes32"
+                },
+                "typeName": {
+                  "id": 33,
+                  "name": "bytes32",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "1271:7:0",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 36,
+                "mutability": "mutable",
+                "name": "requestBody",
+                "nameLocation": "1303:11:0",
+                "nodeType": "VariableDeclaration",
+                "scope": 39,
+                "src": "1297:17:0",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bytes_storage_ptr",
+                  "typeString": "bytes"
+                },
+                "typeName": {
+                  "id": 35,
+                  "name": "bytes",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "1297:5:0",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_storage_ptr",
+                    "typeString": "bytes"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 38,
+                "mutability": "mutable",
+                "name": "fee",
+                "nameLocation": "1332:3:0",
+                "nodeType": "VariableDeclaration",
+                "scope": 39,
+                "src": "1324:11:0",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 37,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "1324:7:0",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "AttestationRequest",
+            "nameLocation": "1209:18:0",
+            "nodeType": "StructDefinition",
+            "scope": 57,
+            "src": "1202:140:0",
+            "visibility": "public"
+          },
+          {
+            "documentation": {
+              "id": 40,
+              "nodeType": "StructuredDocumentation",
+              "src": "1348:147:0",
+              "text": " Submit an attestation request\n @param _request          The attestation request\n @return                  Request ID"
+            },
+            "functionSelector": "782d4746",
+            "id": 48,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "requestAttestation",
+            "nameLocation": "1509:18:0",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 44,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 43,
+                  "mutability": "mutable",
+                  "name": "_request",
+                  "nameLocation": "1556:8:0",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 48,
+                  "src": "1528:36:0",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_AttestationRequest_$39_calldata_ptr",
+                    "typeString": "struct IFdcHub.AttestationRequest"
+                  },
+                  "typeName": {
+                    "id": 42,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 41,
+                      "name": "AttestationRequest",
+                      "nameLocations": [
+                        "1528:18:0"
+                      ],
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 39,
+                      "src": "1528:18:0"
+                    },
+                    "referencedDeclaration": 39,
+                    "src": "1528:18:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_AttestationRequest_$39_storage_ptr",
+                      "typeString": "struct IFdcHub.AttestationRequest"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1527:38:0"
+            },
+            "returnParameters": {
+              "id": 47,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 46,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 48,
+                  "src": "1592:7:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 45,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1592:7:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1591:9:0"
+            },
+            "scope": 57,
+            "src": "1500:101:0",
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 49,
+              "nodeType": "StructuredDocumentation",
+              "src": "1607:163:0",
+              "text": " Get attestation fee for a specific type\n @param _attestationType  The attestation type\n @return                  Required fee amount"
+            },
+            "functionSelector": "c541a297",
+            "id": 56,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getAttestationFee",
+            "nameLocation": "1784:17:0",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 52,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 51,
+                  "mutability": "mutable",
+                  "name": "_attestationType",
+                  "nameLocation": "1810:16:0",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 56,
+                  "src": "1802:24:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 50,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1802:7:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1801:26:0"
+            },
+            "returnParameters": {
+              "id": 55,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 54,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 56,
+                  "src": "1851:7:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 53,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1851:7:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1850:9:0"
+            },
+            "scope": 57,
+            "src": "1775:85:0",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 77,
+        "src": "1178:684:0",
+        "usedErrors": [],
+        "usedEvents": []
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IFdcVerification",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 58,
+          "nodeType": "StructuredDocumentation",
+          "src": "1864:48:0",
+          "text": " Real Flare FDC Verification Interface"
+        },
+        "fullyImplemented": false,
+        "id": 76,
+        "linearizedBaseContracts": [
+          76
+        ],
+        "name": "IFdcVerification",
+        "nameLocation": "1923:16:0",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "canonicalName": "IFdcVerification.Proof",
+            "id": 66,
+            "members": [
+              {
+                "constant": false,
+                "id": 60,
+                "mutability": "mutable",
+                "name": "merkleRoot",
+                "nameLocation": "1977:10:0",
+                "nodeType": "VariableDeclaration",
+                "scope": 66,
+                "src": "1969:18:0",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bytes32",
+                  "typeString": "bytes32"
+                },
+                "typeName": {
+                  "id": 59,
+                  "name": "bytes32",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "1969:7:0",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 63,
+                "mutability": "mutable",
+                "name": "merkleProof",
+                "nameLocation": "2007:11:0",
+                "nodeType": "VariableDeclaration",
+                "scope": 66,
+                "src": "1997:21:0",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_bytes32_$dyn_storage_ptr",
+                  "typeString": "bytes32[]"
+                },
+                "typeName": {
+                  "baseType": {
+                    "id": 61,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1997:7:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "id": 62,
+                  "nodeType": "ArrayTypeName",
+                  "src": "1997:9:0",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_bytes32_$dyn_storage_ptr",
+                    "typeString": "bytes32[]"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 65,
+                "mutability": "mutable",
+                "name": "data",
+                "nameLocation": "2034:4:0",
+                "nodeType": "VariableDeclaration",
+                "scope": 66,
+                "src": "2028:10:0",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bytes_storage_ptr",
+                  "typeString": "bytes"
+                },
+                "typeName": {
+                  "id": 64,
+                  "name": "bytes",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "2028:5:0",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_storage_ptr",
+                    "typeString": "bytes"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "Proof",
+            "nameLocation": "1953:5:0",
+            "nodeType": "StructDefinition",
+            "scope": 76,
+            "src": "1946:99:0",
+            "visibility": "public"
+          },
+          {
+            "documentation": {
+              "id": 67,
+              "nodeType": "StructuredDocumentation",
+              "src": "2051:152:0",
+              "text": " Verify attestation proof\n @param _proof            The proof data\n @return                  True if verification succeeds"
+            },
+            "functionSelector": "eaff84a9",
+            "id": 75,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "verifyAttestation",
+            "nameLocation": "2217:17:0",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 71,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 70,
+                  "mutability": "mutable",
+                  "name": "_proof",
+                  "nameLocation": "2250:6:0",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 75,
+                  "src": "2235:21:0",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Proof_$66_calldata_ptr",
+                    "typeString": "struct IFdcVerification.Proof"
+                  },
+                  "typeName": {
+                    "id": 69,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 68,
+                      "name": "Proof",
+                      "nameLocations": [
+                        "2235:5:0"
+                      ],
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 66,
+                      "src": "2235:5:0"
+                    },
+                    "referencedDeclaration": 66,
+                    "src": "2235:5:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Proof_$66_storage_ptr",
+                      "typeString": "struct IFdcVerification.Proof"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2234:23:0"
+            },
+            "returnParameters": {
+              "id": 74,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 73,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 75,
+                  "src": "2281:4:0",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 72,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2281:4:0",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2280:6:0"
+            },
+            "scope": 76,
+            "src": "2208:79:0",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 77,
+        "src": "1913:376:0",
+        "usedErrors": [],
+        "usedEvents": []
+      }
+    ],
+    "src": "32:2257:0"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.21+commit.d9974bed.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.16",
+  "updatedAt": "2025-09-21T09:30:53.970Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getAttestationFee(bytes32)": {
+        "params": {
+          "_attestationType": "The attestation type"
+        },
+        "returns": {
+          "_0": "Required fee amount"
+        }
+      },
+      "requestAttestation((bytes32,bytes32,bytes,uint256))": {
+        "params": {
+          "_request": "The attestation request"
+        },
+        "returns": {
+          "_0": "Request ID"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "getAttestationFee(bytes32)": {
+        "notice": "Get attestation fee for a specific type"
+      },
+      "requestAttestation((bytes32,bytes32,bytes,uint256))": {
+        "notice": "Submit an attestation request"
+      }
+    },
+    "notice": "Real Flare FDC Hub Interface",
+    "version": 1
+  }
+}

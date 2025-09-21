@@ -2,6 +2,37 @@
   <div class="document-download">
     <h2>View Medical Documents</h2>
 
+    <!-- Smart Account Section -->
+    <div class="smart-account-section">
+      <div class="account-toggle">
+        <label class="toggle-label">
+          <input
+            type="checkbox"
+            v-model="useSmartAccount"
+            @change="onSmartAccountToggle"
+          />
+          <span class="toggle-text">Use Smart Account with XRP Transaction History</span>
+        </label>
+      </div>
+
+      <div v-if="useSmartAccount && xrpTransactionHistory.length > 0" class="xrp-history">
+        <h4>📜 XRP Transaction History</h4>
+        <div class="transaction-list">
+          <div
+            v-for="tx in xrpTransactionHistory"
+            :key="tx.hash"
+            class="transaction-item"
+          >
+            <div class="tx-info">
+              <span class="tx-hash">{{ tx.hash.substring(0, 10) }}...</span>
+              <span class="tx-amount">{{ tx.amount }} XRP</span>
+              <span class="tx-memo" v-if="tx.memo">{{ tx.memo }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Your Uploaded Documents -->
     <div class="uploaded-documents">
       <div class="header-with-refresh">
@@ -234,6 +265,7 @@ import { ethers } from 'ethers'
 import { decryptTextWithWallet, decryptFileWithWallet, hashPatientId } from '@/utils/encryption'
 import { getStoredFileByTxHash, createDownloadBlob, formatFileSize, getLocalStorageInfo, deleteFileByTxHash, deleteFilesByWallet } from '@/utils/local-storage'
 import { mappingService } from '@/utils/mapping-service'
+import { flareXrpSmartAccountService } from '@/utils/flare-xrp-smart-account'
 
 // Props
 interface Props {
@@ -261,7 +293,42 @@ const isLoading = ref(false)
 const isDeleting = ref<Record<string, boolean>>({})
 const showDeleteConfirm = ref(false)
 const deleteTargetType = ref<'single' | 'all'>('single')
+
+// Smart Account state
+const useSmartAccount = ref(false)
+const xrpTransactionHistory = ref<any[]>([])
 const deleteTargetTxHash = ref('')
+
+// Smart Account functions
+const onSmartAccountToggle = async () => {
+  if (useSmartAccount.value) {
+    try {
+      await loadXrpTransactionHistory()
+    } catch (error) {
+      console.error('Failed to initialize smart account:', error)
+      useSmartAccount.value = false
+    }
+  } else {
+    xrpTransactionHistory.value = []
+  }
+}
+
+const loadXrpTransactionHistory = async () => {
+  try {
+    const history = await flareXrpSmartAccountService.getTransactionHistory()
+    xrpTransactionHistory.value = history.filter((tx: any) => {
+      // Filter for transactions with medical-related memos
+      try {
+        const memo = JSON.parse(tx.memo || '{}')
+        return memo.patientId || memo.docType !== undefined
+      } catch {
+        return false
+      }
+    })
+  } catch (error) {
+    console.error('Failed to load XRP transaction history:', error)
+  }
+}
 
 // Document type names
 const getDocTypeName = (type: string | number): string => {
@@ -1017,6 +1084,86 @@ watch(() => props.account, () => {
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
+}
+
+/* Smart Account Styles */
+.smart-account-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  color: white;
+}
+
+.account-toggle {
+  margin-bottom: 1rem;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: white;
+}
+
+.toggle-text {
+  font-size: 1.1rem;
+}
+
+.xrp-history {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.xrp-history h4 {
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.transaction-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.transaction-item {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.tx-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tx-hash {
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.tx-amount {
+  font-weight: bold;
+  color: #2ecc71;
+}
+
+.tx-memo {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  flex: 1;
+  text-align: right;
 }
 
 .uploaded-documents, .manual-lookup {

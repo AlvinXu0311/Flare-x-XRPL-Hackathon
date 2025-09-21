@@ -2,6 +2,52 @@
   <div class="document-upload">
     <h2>Upload Medical Document</h2>
 
+    <!-- Smart Account Toggle -->
+    <div class="smart-account-section">
+      <div class="account-toggle">
+        <label class="toggle-label">
+          <input
+            type="checkbox"
+            v-model="useSmartAccount"
+            @change="onSmartAccountToggle"
+          />
+          <span class="toggle-text">💎 Enable XRP Payments + Medical Memos</span>
+        </label>
+      </div>
+
+      <!-- XRP Integration Status -->
+      <div v-if="useSmartAccount && smartAccountStatus" class="xrp-wallet-info">
+        <div class="wallet-header">
+          <h4>🏦 XRPL Wallet Integration</h4>
+          <div v-if="smartAccountStatus.xrplAddress" class="wallet-address">
+            <span class="label">Your XRPL Address:</span>
+            <span class="address">{{ smartAccountStatus.xrplAddress }}</span>
+            <button @click="copyToClipboard(smartAccountStatus.xrplAddress)" class="copy-btn">📋</button>
+            <a v-if="smartAccountStatus.xrplAddress" :href="getXrplAccountUrl(smartAccountStatus.xrplAddress)" target="_blank" class="view-link xrpl-link">
+              🔍 View on XRPL Explorer
+            </a>
+          </div>
+        </div>
+
+        <div class="account-status">
+          <div class="status-item">
+            <span class="status-label">Flare Balance:</span>
+            <span class="status-value">{{ smartAccountStatus.flareBalance || '0.0' }} FLR</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">XRP Balance:</span>
+            <span class="status-value">{{ smartAccountStatus.xrpBalance || '0.0' }} XRP</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Account Status:</span>
+            <span class="status-value" :class="smartAccountStatus.isLinked ? 'linked' : 'unlinked'">
+              {{ smartAccountStatus.isLinked ? 'Connected' : 'Not Connected' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Upload Form -->
     <div class="upload-section">
       <form @submit.prevent="uploadDocument" class="upload-form">
@@ -216,6 +262,46 @@
                 ✅ Verify Document Hash
               </button>
             </div>
+
+            <!-- XRP Transaction Links -->
+            <div v-if="useSmartAccount && uploadResult.xrpPayment" class="xrp-links">
+              <h5>🔗 XRP Transaction Links</h5>
+              <div class="link-buttons">
+                <a :href="getXrpExplorerUrl(uploadResult.xrpPayment.transactionHash)" target="_blank" class="view-link xrp-link">
+                  💎 View XRP Transaction
+                </a>
+                <button @click="showXrpMemo" class="memo-btn">
+                  📝 View XRP Memo
+                </button>
+              </div>
+            </div>
+
+            <!-- Smart Contract Events Triggered -->
+            <div v-if="useSmartAccount && uploadResult.smartContractEvents" class="contract-events">
+              <h5>📋 Smart Contract Events Triggered</h5>
+              <div class="event-list">
+                <div
+                  v-for="event in uploadResult.smartContractEvents"
+                  :key="event.name"
+                  class="event-item"
+                >
+                  <div class="event-header">
+                    <span class="event-name">{{ event.name }}</span>
+                    <a :href="getEventExplorerUrl(event.txHash, event.logIndex)" target="_blank" class="event-link">
+                      🔍 View Event
+                    </a>
+                  </div>
+                  <div class="event-details">
+                    <div class="event-params">
+                      <div v-for="(value, key) in event.args" :key="key" class="param-item">
+                        <span class="param-key">{{ key }}:</span>
+                        <span class="param-value">{{ formatEventValue(value) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="result-section">
@@ -238,12 +324,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { encryptTextWithWallet, encryptFileWithWallet, generateSalt, hashPatientId, generateFileHash, generateTextHash, createContentURI } from '@/utils/encryption'
 import { storeEncryptedFile } from '@/utils/local-storage'
 import { mappingService } from '@/utils/mapping-service'
 import { ethers } from 'ethers'
+import { getFlareProvider } from '@/utils/robust-web3-provider'
+import UploadHelper from '@/utils/upload-helper'
 import MedicalVaultABI from '@/assets/MedicalVault.json'
+import { flareXrpSmartAccountService } from '@/utils/flare-xrp-smart-account'
+import { xrplPaymentService } from '@/utils/xrpl-payment-service'
 
 // Props
 interface Props {
@@ -265,6 +355,10 @@ const selectedFile = ref<File | null>(null)
 const uploading = ref(false)
 const currentStep = ref(0)
 const uploadStatus = ref('')
+
+// Smart Account state
+const useSmartAccount = ref(false)
+const smartAccountStatus = ref<any>(null)
 const uploadResult = ref<any>(null)
 
 // Removed blockchain-related state
@@ -282,6 +376,26 @@ const canProceedWithUpload = computed(() => {
 // Generate random salt
 const generateNewSalt = () => {
   salt.value = generateSalt()
+}
+
+// Smart Account functions
+const onSmartAccountToggle = async () => {
+  if (useSmartAccount.value) {
+    try {
+      await updateSmartAccountStatus()
+    } catch (error) {
+      console.error('Failed to initialize smart account:', error)
+      useSmartAccount.value = false
+    }
+  }
+}
+
+const updateSmartAccountStatus = async () => {
+  try {
+    smartAccountStatus.value = await flareXrpSmartAccountService.getAccountStatus()
+  } catch (error) {
+    console.error('Failed to get smart account status:', error)
+  }
 }
 
 // Handle file selection
@@ -316,6 +430,73 @@ const getContractAddress = (): string => {
   return props.contract?.address || import.meta.env.VITE_VAULT_ADDRESS || '0x6cd4FEb053E613dF60CF10f0DD1D9597051D241B'
 }
 
+// Get XRP explorer URL
+const getXrpExplorerUrl = (txHash: string): string => {
+  // XRP Ledger Testnet Explorer URLs
+  return `https://testnet.xrpl.org/transactions/${txHash}`
+}
+
+// Get XRPL account explorer URL
+const getXrplAccountUrl = (address: string): string => {
+  return `https://testnet.xrpl.org/accounts/${address}`
+}
+
+// Get event explorer URL
+const getEventExplorerUrl = (txHash: string, logIndex: number): string => {
+  return `https://coston2-explorer.flare.network/tx/${txHash}#eventlog-${logIndex}`
+}
+
+// Show XRP memo details
+const showXrpMemo = () => {
+  if (uploadResult.value?.xrpPayment?.memo) {
+    const memo = uploadResult.value.xrpPayment.memo
+    const memoText = typeof memo === 'string' ? memo : JSON.stringify(memo, null, 2)
+
+    const details = `
+XRP Payment Memo:
+${memoText}
+
+Transaction Hash: ${uploadResult.value.xrpPayment.transactionHash}
+Amount: ${uploadResult.value.xrpPayment.amount} XRP
+Destination: ${uploadResult.value.xrpPayment.destinationAddress}
+    `.trim()
+
+    alert(details)
+  }
+}
+
+
+
+
+// Format event values for display
+const formatEventValue = (value: any): string => {
+  if (typeof value === 'string' && value.startsWith('0x')) {
+    return value.length > 18 ? `${value.substring(0, 8)}...${value.substring(value.length - 6)}` : value
+  }
+  if (value && value._isBigNumber) {
+    return value.toString()
+  }
+  return String(value)
+}
+
+// Copy to clipboard function
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    alert('Copied to clipboard!')
+  } catch (err) {
+    console.error('Failed to copy:', err)
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textArea)
+    alert('Copied to clipboard!')
+  }
+}
+
 // Document type names
 const getDocTypeName = (type: string | number): string => {
   const types: Record<string, string> = {
@@ -331,16 +512,6 @@ const formatTimestamp = (timestamp: number): string => {
   return new Date(timestamp * 1000).toLocaleString()
 }
 
-// Copy to clipboard
-const copyToClipboard = async (text: string) => {
-  try {
-    await navigator.clipboard.writeText(text)
-    // You could add a toast notification here
-    console.log('Copied to clipboard:', text)
-  } catch (err) {
-    console.error('Failed to copy:', err)
-  }
-}
 
 // Verify document hash
 const verifyDocumentHash = async () => {
@@ -421,26 +592,66 @@ const uploadDocument = async () => {
       throw new Error('Wallet not connected')
     }
 
-    // Initialize provider and signer with comprehensive logging
-    console.log('🔗 Creating Web3Provider...')
-    const provider = new ethers.providers.Web3Provider(window.ethereum, {
-      name: 'coston2',
-      chainId: 114
-    })
+    // Initialize robust provider with circuit breaker and retry logic
+    console.log('🔗 Initializing robust Web3Provider with circuit breaker...')
+    const { provider, signer, robustProvider } = await UploadHelper.initializeRobustProvider('testnet')
 
-    console.log('Provider created:', provider)
     console.log('Provider network:', await provider.getNetwork())
 
-    console.log('🖊️ Getting signer...')
-    const signer = provider.getSigner()
-    console.log('Signer created:', signer)
-
+    console.log('🖊️ Getting signer address...')
     const signerAddress = await signer.getAddress()
     console.log('Signer address:', signerAddress)
     console.log('Expected account:', props.account)
 
     if (signerAddress.toLowerCase() !== props.account.toLowerCase()) {
       throw new Error(`Signer address mismatch: ${signerAddress} vs ${props.account}`)
+    }
+
+    // Handle XRP payment and memo if using smart account
+    if (useSmartAccount.value) {
+      currentStep.value = 1.5
+      uploadStatus.value = '💎 Processing XRP payment ($0.10) with medical memo...'
+
+      try {
+        const memoData = {
+          patientId: patientId,
+          docType: parseInt(docType.value),
+          timestamp: Date.now(),
+          uploadType: uploadType.value
+        }
+
+        // Create a simple XRP payment for medical record upload
+        const chargeId = `upload_${Date.now()}_${Math.random().toString(36).substring(7)}`
+        const paymentRequest = await xrplPaymentService.createPaymentRequest(
+          chargeId,
+          props.account, // from wallet
+          props.account, // to wallet (self for record keeping)
+          0.1, // $0.10 USD for medical record upload
+          {
+            serviceType: 'medical_record_upload',
+            patientId: memoData.patientId,
+            description: `Upload ${getDocTypeName(docType.value)} document`
+          }
+        )
+
+        const xrpPayment = await xrplPaymentService.submitPaymentToXrpl(paymentRequest)
+
+        console.log('XRP payment initiated:', xrpPayment)
+
+        // Store XRP payment info for later display
+        uploadResult.value = uploadResult.value || {}
+        uploadResult.value.xrpPayment = {
+          transactionHash: xrpPayment.transactionHash,
+          success: xrpPayment.success,
+          memo: JSON.stringify(memoData)
+        }
+
+        // Update smart account status after payment
+        await updateSmartAccountStatus()
+
+      } catch (xrpError) {
+        console.warn('XRP payment failed, continuing with Flare-only upload:', xrpError)
+      }
     }
 
     // Initialize contract with proper ABI and address
@@ -603,6 +814,31 @@ const uploadDocument = async () => {
     console.log('Gas used:', receipt.gasUsed.toString())
     console.log('Transaction logs:', receipt.logs)
 
+    // Capture smart contract events for smart account integration
+    if (useSmartAccount.value) {
+      uploadResult.value = uploadResult.value || {}
+      uploadResult.value.smartContractEvents = []
+
+      // Parse all events from the transaction
+      receipt.logs.forEach((log: any, index: number) => {
+        try {
+          const parsed = contract.interface.parseLog(log)
+          if (parsed) {
+            uploadResult.value.smartContractEvents.push({
+              name: parsed.name,
+              args: parsed.args,
+              txHash: receipt.transactionHash,
+              logIndex: index,
+              blockNumber: receipt.blockNumber
+            })
+            console.log(`📋 Captured event: ${parsed.name}`, parsed.args)
+          }
+        } catch (error) {
+          console.log('Could not parse log:', log, error)
+        }
+      })
+    }
+
     // Find the DocumentUploaded event
     console.log('🔍 Parsing transaction logs for DocumentUploaded event...')
 
@@ -757,11 +993,22 @@ const uploadDocument = async () => {
       contractAddress: getContractAddress()
     })
 
+    // Enhanced error handling with user-friendly messages
+    const friendlyErrorMessage = UploadHelper.getErrorMessage(error)
+    console.error('❌ Friendly error message:', friendlyErrorMessage)
+
     uploadResult.value = {
       success: false,
-      error: error.message || 'Upload failed'
+      error: friendlyErrorMessage
     }
-    uploadStatus.value = 'Upload failed'
+    uploadStatus.value = `❌ ${friendlyErrorMessage}`
+
+    // Show retry option for circuit breaker errors
+    if (error.code === -32603 && error.message?.includes('circuit breaker')) {
+      setTimeout(() => {
+        uploadStatus.value = '🔄 Network overloaded. Try again in a moment...'
+      }, 2000)
+    }
   } finally {
     uploading.value = false
     console.log('🏁 Upload process completed')
@@ -782,6 +1029,171 @@ h2 {
   color: #2c3e50;
   text-align: center;
   margin-bottom: 2rem;
+}
+
+/* Smart Account Styles */
+.smart-account-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  color: white;
+}
+
+.account-toggle {
+  margin-bottom: 1rem;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: white;
+}
+
+.toggle-text {
+  font-size: 1.1rem;
+}
+
+.account-status {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-label {
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.status-value {
+  font-weight: bold;
+  font-family: monospace;
+}
+
+.status-value.linked {
+  color: #2ecc71;
+}
+
+.status-value.unlinked {
+  color: #e74c3c;
+}
+
+.xrp-wallet-info {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.wallet-header {
+  margin-bottom: 1.5rem;
+}
+
+.wallet-header h4 {
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.wallet-address {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.wallet-address .label {
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.wallet-address .address {
+  font-family: monospace;
+  font-weight: bold;
+  color: #f39c12;
+  flex: 1;
+}
+
+.copy-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.copy-btn:hover {
+  background: #2980b9;
+  transform: scale(1.1);
+}
+
+.xrp-features {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+  width: 2rem;
+  text-align: center;
+}
+
+.feature-text {
+  flex: 1;
+}
+
+.feature-text strong {
+  color: #f39c12;
+}
+
+.memo-preview {
+  margin-top: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #f39c12;
+}
+
+.memo-preview code {
+  color: #ecf0f1;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
 }
 
 h3 {
@@ -1192,6 +1604,122 @@ textarea {
   background: #0056b3;
   color: white;
   text-decoration: none;
+}
+
+.view-link.xrp-link {
+  background: #346aa9;
+}
+
+.view-link.xrp-link:hover {
+  background: #2c5a94;
+}
+
+.xrp-links {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #346aa9 0%, #2c5a94 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.xrp-links h5 {
+  margin: 0 0 1rem 0;
+  color: white;
+}
+
+.memo-btn {
+  background: #e67e22;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.memo-btn:hover {
+  background: #d35400;
+  transform: translateY(-2px);
+}
+
+.contract-events {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.contract-events h5 {
+  margin: 0 0 1rem 0;
+  color: white;
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.event-item {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.event-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.event-link {
+  background: #f39c12;
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.event-link:hover {
+  background: #e67e22;
+  transform: translateY(-1px);
+}
+
+.event-params {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.param-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.param-key {
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.param-value {
+  font-family: monospace;
+  font-size: 0.9rem;
+  word-break: break-all;
 }
 
 .verify-btn {

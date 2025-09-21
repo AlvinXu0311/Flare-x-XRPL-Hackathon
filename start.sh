@@ -88,6 +88,8 @@ check_project_structure() {
 
         cat > $FRONTEND_DIR/.env << EOF
 VITE_VAULT_ADDRESS=0x6cd4FEb053E613dF60CF10f0DD1D9597051D241B
+VITE_FDC_ADDRESS=0x...
+VITE_FTSO_ADDRESS=0x...
 VITE_COSTON2_RPC=https://rpc-coston2.flare.network
 VITE_COSTON2_CHAIN_ID=114
 EOF
@@ -129,6 +131,92 @@ install_dependencies() {
         fi
 
         cd ..
+    fi
+}
+
+# Deploy smart contracts if needed
+deploy_contracts() {
+    print_status "Checking smart contract deployment..."
+
+    if [ -f "truffle-config.js" ]; then
+        # Check if we need to deploy or redeploy contracts
+        if [ "$1" = "--redeploy" ] || [ ! -f "build/contracts/MedicalRecordVaultWithBilling.json" ]; then
+            print_status "Deploying enhanced Medical Vault with Billing..."
+
+            # Install truffle if not present
+            if ! command_exists truffle; then
+                print_status "Installing Truffle..."
+                npm install -g truffle
+            fi
+
+            # Compile contracts
+            print_status "Compiling smart contracts..."
+            truffle compile
+
+            # Deploy to local or testnet
+            print_status "Deploying to network..."
+            if [ -f "migrations/6_deploy_real_fdc_vault.js" ]; then
+                print_status "Deploying with REAL Flare FDC integration..."
+                truffle migrate --reset --network development
+            else
+                print_status "Deploying with mock contracts..."
+                truffle migrate --reset --network development
+            fi
+
+            # Update .env file with new addresses
+            local vault_address=""
+            local use_real_fdc="false"
+
+            # Check for Real FDC contract first
+            if [ -f "build/contracts/MedicalRecordVaultWithRealFDC.json" ]; then
+                vault_address=$(grep -o '"address":"[^"]*"' build/contracts/MedicalRecordVaultWithRealFDC.json | tail -1 | cut -d'"' -f4)
+                use_real_fdc="true"
+
+                print_status "Updating .env file with Real FDC contract address..."
+                sed -i.bak "s/VITE_VAULT_ADDRESS=.*/VITE_VAULT_ADDRESS=$vault_address/" $FRONTEND_DIR/.env
+                sed -i.bak "s/VITE_FDC_ADDRESS=.*/VITE_FDC_ADDRESS=0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019/" $FRONTEND_DIR/.env
+                sed -i.bak "s/VITE_FTSO_ADDRESS=.*/VITE_FTSO_ADDRESS=0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019/" $FRONTEND_DIR/.env
+
+                # Add Real FDC flag
+                if ! grep -q "VITE_USE_REAL_FDC" $FRONTEND_DIR/.env; then
+                    echo "VITE_USE_REAL_FDC=true" >> $FRONTEND_DIR/.env
+                else
+                    sed -i.bak "s/VITE_USE_REAL_FDC=.*/VITE_USE_REAL_FDC=true/" $FRONTEND_DIR/.env
+                fi
+
+                print_success "Smart contracts deployed with REAL Flare FDC!"
+                print_success "Vault Address: $vault_address"
+                print_success "Flare Contract Registry: 0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019"
+                print_success "Using Real FDC: true"
+
+            elif [ -f "build/contracts/MedicalRecordVaultWithBilling.json" ]; then
+                vault_address=$(grep -o '"address":"[^"]*"' build/contracts/MedicalRecordVaultWithBilling.json | tail -1 | cut -d'"' -f4)
+                local fdc_address=$(grep -o '"address":"[^"]*"' build/contracts/MockFDC.json | tail -1 | cut -d'"' -f4)
+                local ftso_address=$(grep -o '"address":"[^"]*"' build/contracts/MockFTSO.json | tail -1 | cut -d'"' -f4)
+
+                print_status "Updating .env file with Mock contract addresses..."
+                sed -i.bak "s/VITE_VAULT_ADDRESS=.*/VITE_VAULT_ADDRESS=$vault_address/" $FRONTEND_DIR/.env
+                sed -i.bak "s/VITE_FDC_ADDRESS=.*/VITE_FDC_ADDRESS=$fdc_address/" $FRONTEND_DIR/.env
+                sed -i.bak "s/VITE_FTSO_ADDRESS=.*/VITE_FTSO_ADDRESS=$ftso_address/" $FRONTEND_DIR/.env
+
+                # Add Real FDC flag
+                if ! grep -q "VITE_USE_REAL_FDC" $FRONTEND_DIR/.env; then
+                    echo "VITE_USE_REAL_FDC=false" >> $FRONTEND_DIR/.env
+                else
+                    sed -i.bak "s/VITE_USE_REAL_FDC=.*/VITE_USE_REAL_FDC=false/" $FRONTEND_DIR/.env
+                fi
+
+                print_success "Smart contracts deployed with Mock FDC!"
+                print_success "Vault Address: $vault_address"
+                print_success "FDC Address: $fdc_address"
+                print_success "FTSO Address: $ftso_address"
+                print_success "Using Real FDC: false"
+            fi
+        else
+            print_success "Smart contracts already deployed!"
+        fi
+    else
+        print_warning "No truffle-config.js found, skipping contract deployment..."
     fi
 }
 
@@ -445,6 +533,7 @@ trap cleanup SIGINT SIGTERM
 main() {
     # Parse command line arguments
     FRONTEND_ONLY=false
+    REDEPLOY_CONTRACTS=false
 
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -452,10 +541,15 @@ main() {
                 FRONTEND_ONLY=true
                 shift
                 ;;
+            --redeploy)
+                REDEPLOY_CONTRACTS=true
+                shift
+                ;;
             --help)
                 echo "Usage: $0 [OPTIONS]"
                 echo "Options:"
                 echo "  --frontend-only    Start only the frontend"
+                echo "  --redeploy         Force redeploy smart contracts"
                 echo "  --help            Show this help message"
                 exit 0
                 ;;
@@ -473,6 +567,13 @@ main() {
 
     # Install and setup
     install_dependencies
+
+    # Deploy contracts if needed
+    if [ "$REDEPLOY_CONTRACTS" = true ]; then
+        deploy_contracts --redeploy
+    else
+        deploy_contracts
+    fi
 
     # Start services
     if [ "$FRONTEND_ONLY" = false ]; then
