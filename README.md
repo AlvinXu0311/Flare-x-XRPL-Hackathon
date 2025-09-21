@@ -4,6 +4,10 @@ A **fully decentralized** medical records management system built on **Flare Net
 
 ## 🌐 **Fully Decentralized Architecture**
 
+
+https://github.com/user-attachments/assets/fd009cf1-1512-414f-a432-eb4fecc38bca
+
+
 ```
 ┌─────────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
 │   Browser Client    │    │   IPFS Network      │    │   Flare Blockchain  │
