@@ -372,27 +372,84 @@ const downloadThisDocument = async () => {
   if (!uploadResult.value) return
 
   try {
-    // Navigate to download tab with pre-filled data
-    console.log('📥 Preparing download with:', {
-      mrn: uploadResult.value.mrn,
-      salt: uploadResult.value.salt,
-      docType: uploadResult.value.docKind,
-      encryptionKey: uploadResult.value.encryptionKey
-    })
+    console.log('📥 Starting download process...')
+    console.log('IPFS Hash:', uploadResult.value.ipfsHash)
+    console.log('Using encryption password:', uploadResult.value.encryptionKey ? 'Present' : 'Missing')
 
-    // You can emit an event to parent component to switch tabs and pre-fill data
-    // or use router to navigate with query parameters
-    alert(`Download Information:
-MRN: ${uploadResult.value.mrn}
-Salt: ${uploadResult.value.salt}
-Document Type: ${getDocTypeLabel(uploadResult.value.docKind)}
-Encryption Password: ${uploadResult.value.encryptionKey}
+    // Show downloading status
+    uploadStatus.value = 'Downloading from IPFS...'
 
-Navigate to the Download tab and use these details to download your document.`)
+    // Get IPFS gateway URL
+    const ipfsUrl = getIPFSViewUrl(uploadResult.value.ipfsHash)
+    console.log('📡 Fetching from:', ipfsUrl)
+
+    // Fetch encrypted file from IPFS
+    const response = await fetch(ipfsUrl)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch from IPFS: ${response.status} ${response.statusText}`)
+    }
+
+    uploadStatus.value = 'Decrypting file...'
+
+    // Get encrypted content as text
+    const encryptedContent = await response.text()
+    console.log('📦 Encrypted content length:', encryptedContent.length)
+
+    // Decrypt the file using stored encryption key and salt
+    const { decryptFile } = await import('@/utils/encryption')
+    const decryptedBuffer = decryptFile(
+      encryptedContent,
+      uploadResult.value.encryptionKey,
+      uploadResult.value.salt
+    )
+
+    console.log('🔓 Decrypted file size:', decryptedBuffer.byteLength)
+
+    // Create blob from decrypted content
+    const blob = new Blob([decryptedBuffer])
+
+    // Generate filename
+    const timestamp = new Date(uploadResult.value.timestamp).toISOString().slice(0, 19).replace(/:/g, '-')
+    const docTypeName = getDocTypeLabel(uploadResult.value.docKind).replace(/\s+/g, '_')
+    const filename = `medical_${docTypeName}_${uploadResult.value.mrn}_v${uploadResult.value.version}_${timestamp}`
+
+    // Trigger download
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    uploadStatus.value = 'Download completed!'
+    console.log('✅ Download successful!')
+
+    // Reset status after 3 seconds
+    setTimeout(() => {
+      uploadStatus.value = 'Upload completed successfully!'
+    }, 3000)
 
   } catch (error) {
-    console.error('Download preparation error:', error)
-    alert('Failed to prepare download. Please use the Download tab manually.')
+    console.error('❌ Download error:', error)
+    uploadStatus.value = 'Download failed!'
+
+    let errorMessage = 'Download failed: '
+    if (error.message.includes('fetch')) {
+      errorMessage += 'Could not retrieve file from IPFS. The file may not be fully propagated yet.'
+    } else if (error.message.includes('Decryption')) {
+      errorMessage += 'Could not decrypt file. Check if the encryption password is correct.'
+    } else {
+      errorMessage += error.message
+    }
+
+    alert(errorMessage + '\n\nYou can also try:\n1. View on IPFS Gateway (link below)\n2. Use the Download tab with these details:\n- MRN: ' + uploadResult.value.mrn + '\n- Salt: ' + uploadResult.value.salt + '\n- Encryption Password: ' + uploadResult.value.encryptionKey)
+
+    // Reset status after 5 seconds
+    setTimeout(() => {
+      uploadStatus.value = 'Upload completed successfully!'
+    }, 5000)
   }
 }
 
