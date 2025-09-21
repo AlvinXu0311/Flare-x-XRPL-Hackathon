@@ -78,58 +78,24 @@
         <!-- Payment Method -->
         <div class="payment-section">
           <h3>Payment Method</h3>
-          <div class="payment-options">
-            <label class="radio-option">
-              <input
-                type="radio"
-                value="flr"
-                v-model="paymentMethod"
-                @change="checkInsurerBalance"
-              />
-              <span>FLR Deduct (from insurer balance)</span>
-            </label>
-            <label class="radio-option">
-              <input
-                type="radio"
-                value="xrpl"
-                v-model="paymentMethod"
-              />
-              <span>XRPL Payment (with proof)</span>
-            </label>
-          </div>
-
-          <!-- FLR Balance Info -->
-          <div v-if="paymentMethod === 'flr' && insurerBalance !== null" class="balance-info">
-            <p><strong>Insurer Balance:</strong> {{ formatEther(insurerBalance) }} FLR</p>
-            <p><strong>Upload Fee:</strong> {{ formatEther(uploadFeeWei) }} FLR</p>
-            <p v-if="Number(insurerBalance) < Number(uploadFeeWei)" class="error">
-              ⚠️ Insufficient balance! Please deposit more FLR first.
-            </p>
+          <div class="payment-info">
+            <p><strong>XRPL Payment Required</strong></p>
+            <p>This vault uses XRPL payment verification with mock oracles for testing.</p>
+            <p>Required: 5,000,000 drops (≈ $5.00 at $1.00/XRP)</p>
           </div>
 
           <!-- XRPL Payment Fields -->
-          <div v-if="paymentMethod === 'xrpl'" class="xrpl-fields">
+          <div class="xrpl-fields">
             <div class="input-group">
-              <label for="xrplProof">XRPL Payment Proof:</label>
+              <label for="xrplProof">XRPL Payment Proof (for testing):</label>
               <textarea
                 id="xrplProof"
                 v-model="xrplProofData"
-                placeholder="Enter XRPL payment proof data"
-                rows="3"
+                placeholder="Enter any text (e.g., 'test-payment-12345') - MockFDC will accept any proof"
+                rows="2"
                 required
               ></textarea>
-            </div>
-            <div class="input-group">
-              <label for="attestedUSD">Attested USD Amount (cents):</label>
-              <input
-                id="attestedUSD"
-                v-model="attestedUSDc"
-                type="number"
-                placeholder="500"
-                min="1"
-                required
-              />
-              <small>Amount in USD cents (e.g., 500 = $5.00)</small>
+              <small>For testing: any text works since MockFDC accepts all proofs</small>
             </div>
           </div>
         </div>
@@ -164,16 +130,58 @@
       <div v-if="uploadResult" class="upload-result">
         <div v-if="uploadResult.success" class="success">
           <h3>✅ Document Uploaded Successfully!</h3>
-          <p><strong>IPFS Hash:</strong> {{ uploadResult.ipfsHash }}</p>
-          <p><strong>Transaction Hash:</strong> {{ uploadResult.txHash }}</p>
-          <p><strong>Version:</strong> {{ uploadResult.version }}</p>
-          <a :href="getIPFSViewUrl(uploadResult.ipfsHash)" target="_blank" class="view-link">
-            View on IPFS Gateway
-          </a>
+
+          <div class="result-details">
+            <div class="detail-group">
+              <h4>📄 Document Information</h4>
+              <p><strong>Patient MRN:</strong> {{ uploadResult.mrn }}</p>
+              <p><strong>Document Type:</strong> {{ getDocTypeLabel(uploadResult.docKind) }}</p>
+              <p><strong>Version:</strong> {{ uploadResult.version }}</p>
+              <p><strong>Upload Time:</strong> {{ formatTimestamp(uploadResult.timestamp) }}</p>
+            </div>
+
+            <div class="detail-group">
+              <h4>🔗 Blockchain Details</h4>
+              <p><strong>Transaction Hash:</strong>
+                <a :href="getTransactionUrl(uploadResult.txHash)" target="_blank" class="hash-link">
+                  {{ formatHash(uploadResult.txHash) }}
+                </a>
+              </p>
+              <p><strong>IPFS Hash:</strong>
+                <a :href="getIPFSViewUrl(uploadResult.ipfsHash)" target="_blank" class="hash-link">
+                  {{ formatHash(uploadResult.ipfsHash) }}
+                </a>
+              </p>
+              <p><strong>Payment Method:</strong> XRPL</p>
+            </div>
+
+            <div class="detail-group">
+              <h4>📥 Download Document</h4>
+              <button @click="downloadThisDocument" class="download-btn">
+                Download & Decrypt Document
+              </button>
+              <p class="download-note">Uses the same encryption password you provided</p>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <a :href="getIPFSViewUrl(uploadResult.ipfsHash)" target="_blank" class="view-link">
+              View on IPFS Gateway
+            </a>
+            <a :href="getTransactionUrl(uploadResult.txHash)" target="_blank" class="view-link">
+              View Transaction on Explorer
+            </a>
+          </div>
         </div>
-        <div v-else class="error">
-          <h3>❌ Upload Failed</h3>
-          <p>{{ uploadResult.error }}</p>
+        <div v-else :class="uploadResult.registrationComplete ? 'registration-success' : 'error'">
+          <h3>{{ uploadResult.registrationComplete ? (uploadResult.needsRegistration ? '⚠️ Registration Required' : '✅ Registration Complete') : '❌ Upload Failed' }}</h3>
+          <p style="white-space: pre-line;">{{ uploadResult.error }}</p>
+          <button v-if="uploadResult.registrationComplete && uploadResult.needsRegistration" @click="tryUploadAgain" class="retry-btn">
+            Register as Patient
+          </button>
+          <button v-if="uploadResult.registrationComplete && !uploadResult.needsRegistration" @click="uploadDocumentOnly" class="retry-btn">
+            Upload Document Now
+          </button>
         </div>
       </div>
     </div>
@@ -186,7 +194,7 @@ import { ethers } from 'ethers'
 import { uploadToIPFS, ipfsToGatewayUrl } from '@/utils/ipfs'
 import { uploadToIPFSSimple, ipfsToGatewayUrlSimple } from '@/utils/ipfs-simple'
 import { encryptFile, generateSalt, hashPatientId } from '@/utils/encryption'
-import MedicalVaultABI from '@/assets/MedicalVault.json'
+import MedicalVaultABI from '@/assets/SimpleMedicalVault.json'
 
 // Props
 interface Props {
@@ -203,17 +211,13 @@ const salt = ref('')
 const docType = ref('0')
 const selectedFile = ref<File | null>(null)
 const encryptionKey = ref('')
-const paymentMethod = ref('flr')
 const xrplProofData = ref('')
-const attestedUSDc = ref(500) // Default $5.00
 
 const uploading = ref(false)
 const currentStep = ref(0)
 const uploadStatus = ref('')
 const uploadResult = ref<any>(null)
 
-const insurerBalance = ref<string | null>(null)
-const uploadFeeWei = ref<string>('0')
 
 // Computed properties
 const canProceedWithUpload = computed(() => {
@@ -221,20 +225,40 @@ const canProceedWithUpload = computed(() => {
     return false
   }
 
-  if (paymentMethod.value === 'flr') {
-    return insurerBalance.value !== null &&
-           Number(insurerBalance.value) >= Number(uploadFeeWei.value)
-  }
-
-  if (paymentMethod.value === 'xrpl') {
-    return xrplProofData.value.trim() !== '' && attestedUSDc.value >= 500
-  }
-
-  return false
+  // Need XRPL proof data (any text works with MockFDC)
+  return xrplProofData.value.trim().length > 0
 })
 
-// Check and register patient permissions
+// Check upload permission (read-only check)
 const checkUploadPermission = async () => {
+  if (!props.contract || !mrn.value || !salt.value) return
+
+  try {
+    const patientId = hashPatientId(mrn.value, salt.value)
+
+    // Only check if current account can upload for this patient (no auto-registration)
+    try {
+      const canUpload = await props.contract.canUploadForPatient(patientId, props.account)
+      if (canUpload) {
+        console.log('✅ Upload permission already granted')
+        return true
+      } else {
+        console.log('⚠️ Upload permission not granted - will register during upload')
+        return false
+      }
+    } catch (e) {
+      console.log('Permission check failed:', e.message)
+      return false
+    }
+
+  } catch (error) {
+    console.warn('Permission check failed:', error)
+    return false
+  }
+}
+
+// Register patient (only called during upload)
+const registerPatientIfNeeded = async () => {
   if (!props.contract || !mrn.value || !salt.value) return
 
   try {
@@ -282,34 +306,6 @@ const checkUploadPermission = async () => {
   }
 }
 
-// Check insurer balance for FLR payment
-const checkInsurerBalance = async () => {
-  if (!props.contract || !mrn.value || !salt.value) return
-
-  try {
-    const patientId = hashPatientId(mrn.value, salt.value)
-
-    try {
-      // Try ethers contract calls first
-      const insurerAddress = await props.contract.insurerOf(patientId)
-
-      if (insurerAddress !== '0x0000000000000000000000000000000000000000') {
-        const balance = await props.contract.insurerBalances(insurerAddress)
-        insurerBalance.value = balance.toString()
-      }
-
-      const fee = await props.contract.uploadFeeWei()
-      uploadFeeWei.value = fee.toString()
-    } catch (ethersError) {
-      console.warn('Ethers balance check failed, using default values:', ethersError)
-      // Fallback to default values if ethers proxy fails
-      insurerBalance.value = '1000000000000000000' // 1 FLR default
-      uploadFeeWei.value = '100000000000000000'   // 0.1 FLR default
-    }
-  } catch (error) {
-    console.error('Error checking insurer balance:', error)
-  }
-}
 
 // Generate random salt
 const generateNewSalt = () => {
@@ -347,6 +343,148 @@ const getIPFSViewUrl = (hash: string): string => {
   } catch {
     return ipfsToGatewayUrlSimple(hash)
   }
+}
+
+// Get transaction URL for Coston2 explorer
+const getTransactionUrl = (txHash: string): string => {
+  return `https://coston2-explorer.flare.network/tx/${txHash}`
+}
+
+// Format hash for display (show first 10 and last 8 characters)
+const formatHash = (hash: string): string => {
+  if (hash.length <= 18) return hash
+  return `${hash.slice(0, 10)}...${hash.slice(-8)}`
+}
+
+// Format timestamp for display
+const formatTimestamp = (timestamp: string): string => {
+  return new Date(timestamp).toLocaleString()
+}
+
+// Get document type label
+const getDocTypeLabel = (docKind: number): string => {
+  const types = ['Diagnosis Letter', 'Referral', 'Intake Form']
+  return types[docKind] || 'Unknown'
+}
+
+// Download this document
+const downloadThisDocument = async () => {
+  if (!uploadResult.value) return
+
+  try {
+    // Navigate to download tab with pre-filled data
+    console.log('📥 Preparing download with:', {
+      mrn: uploadResult.value.mrn,
+      salt: uploadResult.value.salt,
+      docType: uploadResult.value.docKind,
+      encryptionKey: uploadResult.value.encryptionKey
+    })
+
+    // You can emit an event to parent component to switch tabs and pre-fill data
+    // or use router to navigate with query parameters
+    alert(`Download Information:
+MRN: ${uploadResult.value.mrn}
+Salt: ${uploadResult.value.salt}
+Document Type: ${getDocTypeLabel(uploadResult.value.docKind)}
+Encryption Password: ${uploadResult.value.encryptionKey}
+
+Navigate to the Download tab and use these details to download your document.`)
+
+  } catch (error) {
+    console.error('Download preparation error:', error)
+    alert('Failed to prepare download. Please use the Download tab manually.')
+  }
+}
+
+// Register patient and then upload
+const tryUploadAgain = async () => {
+  if (!selectedFile.value || !props.contract) return
+
+  uploadResult.value = null
+  uploading.value = true
+  uploadStatus.value = 'Registering as patient...'
+
+  try {
+    const patientId = hashPatientId(mrn.value, salt.value)
+
+    // Perform registration
+    const freshProvider = new ethers.providers.Web3Provider(window.ethereum, 'any')
+    await freshProvider.ready
+    const freshSigner = freshProvider.getSigner()
+    const freshContract = new ethers.Contract(
+      import.meta.env.VITE_VAULT_ADDRESS,
+      MedicalVaultABI.abi,
+      freshSigner
+    )
+
+    const registerTx = await freshContract.registerAsPatient(patientId, {
+      gasLimit: 200000,
+      gasPrice: ethers.utils.parseUnits('25', 'gwei')
+    })
+
+    uploadStatus.value = 'Registration transaction submitted...'
+    const registerReceipt = await registerTx.wait()
+
+    uploadResult.value = {
+      success: false,
+      error: `Patient registration completed successfully!
+
+Transaction Hash: ${registerReceipt.hash}
+
+You are now registered as a patient and can upload documents. Using XRPL payment, click "Upload Document Now" to proceed.`,
+      registrationComplete: true,
+      actualTxHash: registerReceipt.hash
+    }
+
+  } catch (error: any) {
+    uploadResult.value = {
+      success: false,
+      error: `Registration failed: ${error.message}`
+    }
+  } finally {
+    uploading.value = false
+  }
+}
+
+// Actually upload the document (called after registration is confirmed)
+const uploadDocumentOnly = async () => {
+  uploadResult.value = null
+  await uploadDocument()
+}
+
+// Verify IPFS upload completed successfully
+const verifyIPFSUpload = async (hash: string): Promise<void> => {
+  const maxAttempts = 5
+  const delayMs = 2000
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const gatewayUrl = getIPFSViewUrl(hash)
+
+      // Make a HEAD request to check if file exists and is accessible
+      const response = await fetch(gatewayUrl, {
+        method: 'HEAD',
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      })
+
+      if (response.ok) {
+        console.log(`✅ IPFS file verified on attempt ${attempt}`)
+        return
+      }
+
+      console.warn(`IPFS verification attempt ${attempt} failed: ${response.status}`)
+    } catch (error) {
+      console.warn(`IPFS verification attempt ${attempt} error:`, error)
+    }
+
+    if (attempt < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, delayMs))
+    }
+  }
+
+  // If all attempts failed, log warning but don't throw error
+  // IPFS propagation can be slow, but the hash is likely valid
+  console.warn('IPFS verification failed, but proceeding with upload (IPFS propagation may take time)')
 }
 
 // Direct wallet transaction helper (bypasses ethers proxy issues)
@@ -485,6 +623,11 @@ const uploadDocument = async () => {
       console.warn('IPFS upload failed, using simple fallback:', ipfsError)
       ipfsHash = await uploadToIPFSSimple(encryptedFile)
     }
+
+    // Verify IPFS upload completed successfully
+    uploadStatus.value = 'Verifying IPFS upload...'
+    await verifyIPFSUpload(ipfsHash)
+
     const ipfsUri = `ipfs://${ipfsHash}`
 
     // Step 3: Record on blockchain
@@ -494,82 +637,67 @@ const uploadDocument = async () => {
     const patientId = hashPatientId(mrn.value, salt.value)
     const docKind = parseInt(docType.value)
 
+    uploadStatus.value = 'Submitting document upload...'
+    console.log('📤 Starting upload process for patient:', patientId)
+
     let tx: any
     let receipt: any
 
     try {
-      if (paymentMethod.value === 'flr') {
-        // FLR deduct payment - create fresh provider to avoid proxy issues
-        try {
-          // Create a completely fresh provider and contract instance
-          const freshProvider = new ethers.providers.Web3Provider(window.ethereum, 'any')
-          await freshProvider.ready
-          const freshSigner = freshProvider.getSigner()
-          const freshContract = new ethers.Contract(
-            import.meta.env.VITE_VAULT_ADDRESS,
-            MedicalVaultABI.abi,
-            freshSigner
-          )
+      console.log('✅ Using simplified XRPL-only upload path')
 
-          console.log('Using fresh provider for FLR upload')
-          tx = await freshContract.uploadDocumentDeduct(
-            patientId,
-            docKind,
-            ipfsUri,
-            {
-              gasLimit: 300000, // Manual gas limit to avoid estimation
-              gasPrice: ethers.utils.parseUnits('25', 'gwei') // 25 gwei gas price
-            }
-          )
-        } catch (ethersError) {
-          console.warn('Ethers contract call failed, using direct wallet approach:', ethersError)
-          // Fallback to direct wallet transaction
-          tx = await sendDirectTransaction('uploadDocumentDeduct', [patientId, docKind, ipfsUri])
-        }
-      } else {
-        // XRPL payment - try ethers first, fallback to raw wallet
-        const proofText = xrplProofData.value || 'mock_xrpl_proof'
-        const mockProofId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(proofText))
-        const mockStatementId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(`patient_${Date.now()}`))
-        const mockCurrencyHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('USD|mock_issuer'))
-        const proofBytes = ethers.utils.toUtf8Bytes(proofText)
-
-        try {
-          // Create a completely fresh provider and contract instance for XRPL
-          const freshProvider = new ethers.providers.Web3Provider(window.ethereum, 'any')
-          await freshProvider.ready
-          const freshSigner = freshProvider.getSigner()
-          const freshContract = new ethers.Contract(
-            import.meta.env.VITE_VAULT_ADDRESS,
-            MedicalVaultABI.abi,
-            freshSigner
-          )
-
-          console.log('Using fresh provider for XRPL upload')
-          tx = await freshContract.uploadDocumentWithXRPLAnyCurrency(
-            patientId,
-            docKind,
-            ipfsUri,
-            proofBytes,
-            mockStatementId,
-            mockProofId,
-            attestedUSDc.value,
-            mockCurrencyHash,
-            {
-              gasLimit: 400000, // Higher gas limit for XRPL method
-              gasPrice: ethers.utils.parseUnits('25', 'gwei') // 25 gwei gas price
-            }
-          )
-        } catch (ethersError) {
-          console.warn('Ethers XRPL contract call failed, using direct wallet approach:', ethersError)
-          // Fallback to direct wallet transaction
-          tx = await sendDirectTransaction('uploadDocumentWithXRPLAnyCurrency', [
-            patientId, docKind, ipfsUri, proofBytes, mockStatementId, mockProofId, attestedUSDc.value, mockCurrencyHash
-          ])
-        }
+      // Prepare XRPL proof data
+      if (!xrplProofData.value.trim()) {
+        throw new Error('XRPL payment proof is required. Enter any text (MockFDC accepts all proofs)')
       }
 
+      const proofText = xrplProofData.value.trim()
+      const mockProofId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(proofText))
+      const mockStatementId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(`patient_${Date.now()}`))
+      const proofBytes = ethers.utils.toUtf8Bytes(proofText)
+
+      // Get required drops from contract
+      uploadStatus.value = 'Checking payment requirements...'
+      const freshProvider = new ethers.providers.Web3Provider(window.ethereum, 'any')
+      await freshProvider.ready
+      const freshSigner = freshProvider.getSigner()
+      const freshContract = new ethers.Contract(
+        import.meta.env.VITE_VAULT_ADDRESS,
+        MedicalVaultABI.abi,
+        freshSigner
+      )
+
+      const requiredInfo = await freshContract.requiredXrpDrops()
+      const requiredDrops = requiredInfo.drops
+
+      console.log('💰 Payment details:', {
+        patientId,
+        docKind,
+        ipfsUri,
+        requiredDrops: requiredDrops.toString(),
+        proofLength: proofBytes.length
+      })
+
+      uploadStatus.value = 'Submitting XRPL upload transaction...'
+
+      tx = await freshContract.uploadDocumentXRP(
+        patientId,
+        docKind,
+        ipfsUri,
+        proofBytes,
+        mockStatementId,
+        mockProofId,
+        requiredDrops,
+        {
+          gasLimit: 500000,
+          gasPrice: ethers.utils.parseUnits('25', 'gwei')
+        }
+      )
+
       // Wait for transaction receipt
+      uploadStatus.value = 'Waiting for transaction confirmation...'
+      console.log('📝 Transaction submitted:', tx.hash || tx)
+
       if (tx.hash) {
         // If it's an ethers transaction
         receipt = await tx.wait()
@@ -578,8 +706,41 @@ const uploadDocument = async () => {
         receipt = await waitForTransactionReceipt(tx)
       }
 
+      console.log('✅ Transaction confirmed:', receipt.transactionHash || receipt.hash)
+      console.log('📊 Gas used:', receipt.gasUsed)
+      console.log('📋 Events emitted:', receipt.logs?.length || 0)
+
     } catch (contractError) {
       console.error('Contract interaction failed:', contractError)
+
+      // If upload fails due to not being registered, capture the actual transaction hash
+      if (contractError.message.includes('not patient/pediatric') ||
+          contractError.message.includes('not guardian/owner') ||
+          contractError.message.includes('execution reverted')) {
+
+        // Check if we have a transaction hash from the failed attempt
+        let actualTxHash = 'Unknown'
+        if (tx && tx.hash) {
+          actualTxHash = tx.hash
+        } else if (typeof tx === 'string') {
+          actualTxHash = tx
+        }
+
+        uploadResult.value = {
+          success: false,
+          error: `Upload failed: Patient not registered yet.
+
+${actualTxHash !== 'Unknown' ? `Transaction Hash: ${actualTxHash}` : 'Please try registering as patient first.'}
+
+Click "Register as Patient" below to register first.`,
+          registrationComplete: true,
+          needsRegistration: true,
+          actualTxHash
+        }
+        uploading.value = false
+        return
+      }
+
       throw new Error(`Contract call failed: ${contractError.message}`)
     }
 
@@ -605,14 +766,28 @@ const uploadDocument = async () => {
       // Use default version = 1
     }
 
+    const finalTxHash = receipt.transactionHash || receipt.hash || tx.hash || tx;
+
     uploadResult.value = {
       success: true,
       ipfsHash,
-      txHash: receipt.hash || tx, // Use receipt.hash for ethers, tx for direct wallet
-      version
+      txHash: finalTxHash,
+      version,
+      patientId,
+      docKind,
+      mrn: mrn.value,
+      salt: salt.value,
+      encryptionKey: encryptionKey.value, // Store for download
+      paymentMethod: 'xrpl',
+      timestamp: new Date().toISOString()
     }
 
+    console.log('🎉 Upload complete! Transaction:', finalTxHash)
+    console.log('📱 IPFS hash:', ipfsHash)
+    console.log('📊 Document version:', version)
+
     uploadStatus.value = 'Upload completed successfully!'
+    currentStep.value = 4 // Mark all steps as complete
 
   } catch (error: any) {
     console.error('Upload error:', error)
@@ -646,25 +821,10 @@ const uploadDocument = async () => {
 
 // Initialize component
 onMounted(async () => {
-  await checkUploadPermission()
-  if (mrn.value && salt.value) {
-    await checkInsurerBalance()
-  }
-})
-
-// Watch for changes in patient details to update balance info and permissions
-watch([mrn, salt], async () => {
-  if (mrn.value && salt.value) {
-    await checkUploadPermission()
-    await checkInsurerBalance()
-  }
-})
-
-// Watch for account changes to update any necessary info
-watch(() => props.account, async () => {
-  if (props.account) {
-    await checkUploadPermission()
-  }
+  // Set default test values for easy testing
+  mrn.value = 'TEST123'
+  salt.value = 'salt456'
+  xrplProofData.value = 'test-payment-12345'
 })
 </script>
 
@@ -899,6 +1059,91 @@ input, select, textarea {
   background: #d5f4e6;
   border: 1px solid #27ae60;
   color: #155724;
+}
+
+.result-details {
+  margin: 1.5rem 0;
+}
+
+.detail-group {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  border-left: 4px solid #27ae60;
+}
+
+.detail-group h4 {
+  margin: 0 0 0.75rem 0;
+  color: #27ae60;
+  font-size: 1rem;
+}
+
+.detail-group p {
+  margin: 0.5rem 0;
+}
+
+.hash-link {
+  color: #3498db;
+  text-decoration: none;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.hash-link:hover {
+  text-decoration: underline;
+}
+
+.download-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.download-btn:hover {
+  background: #2980b9;
+}
+
+.download-note {
+  font-size: 0.8rem;
+  color: #666;
+  font-style: italic;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.registration-success {
+  background: #e8f5e8;
+  color: #2e7d32;
+  padding: 1.5rem;
+  border-radius: 4px;
+  border-left: 4px solid #4caf50;
+}
+
+.retry-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+.retry-btn:hover {
+  background: #45a049;
 }
 
 .error {
