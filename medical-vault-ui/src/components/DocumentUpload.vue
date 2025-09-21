@@ -78,14 +78,34 @@
         <!-- Payment Method -->
         <div class="payment-section">
           <h3>Payment Method</h3>
-          <div class="payment-info">
-            <p><strong>XRPL Payment Required</strong></p>
-            <p>This vault uses XRPL payment verification with mock oracles for testing.</p>
-            <p>Required: 5,000,000 drops (≈ $5.00 at $1.00/XRP)</p>
+          <div class="payment-options">
+            <div class="radio-option">
+              <input
+                id="xrpl"
+                v-model="paymentMethod"
+                type="radio"
+                value="xrpl"
+              />
+              <label for="xrpl">XRPL Payment (≈ $5.00)</label>
+            </div>
+            <div class="radio-option">
+              <input
+                id="flr"
+                v-model="paymentMethod"
+                type="radio"
+                value="flr"
+              />
+              <label for="flr">FLR Direct Payment (0.001 FLR)</label>
+            </div>
           </div>
 
           <!-- XRPL Payment Fields -->
-          <div class="xrpl-fields">
+          <div v-if="paymentMethod === 'xrpl'" class="xrpl-fields">
+            <div class="payment-info">
+              <p><strong>XRPL Payment Required</strong></p>
+              <p>This vault uses XRPL payment verification with mock oracles for testing.</p>
+              <p>Required: 5,000,000 drops (≈ $5.00 at $1.00/XRP)</p>
+            </div>
             <div class="input-group">
               <label for="xrplProof">XRPL Payment Proof (for testing):</label>
               <textarea
@@ -96,6 +116,16 @@
                 required
               ></textarea>
               <small>For testing: any text works since MockFDC accepts all proofs</small>
+            </div>
+          </div>
+
+          <!-- FLR Payment Fields -->
+          <div v-if="paymentMethod === 'flr'" class="flr-fields">
+            <div class="payment-info">
+              <p><strong>Direct FLR Payment</strong></p>
+              <p>Upload fee: 0.001 FLR (paid directly with transaction)</p>
+              <p>Your wallet will be charged 0.001 FLR when you upload.</p>
+              <p><em>Perfect for insurers - no pre-deposit required!</em></p>
             </div>
           </div>
         </div>
@@ -152,7 +182,7 @@
                   {{ formatHash(uploadResult.ipfsHash) }}
                 </a>
               </p>
-              <p><strong>Payment Method:</strong> XRPL</p>
+              <p><strong>Payment Method:</strong> {{ uploadResult.paymentMethod?.toUpperCase() || 'XRPL' }}</p>
             </div>
 
             <div class="detail-group">
@@ -212,6 +242,7 @@ const docType = ref('0')
 const selectedFile = ref<File | null>(null)
 const encryptionKey = ref('')
 const xrplProofData = ref('')
+const paymentMethod = ref('xrpl')
 
 const uploading = ref(false)
 const currentStep = ref(0)
@@ -225,8 +256,14 @@ const canProceedWithUpload = computed(() => {
     return false
   }
 
-  // Need XRPL proof data (any text works with MockFDC)
-  return xrplProofData.value.trim().length > 0
+  // Check payment method requirements
+  if (paymentMethod.value === 'xrpl') {
+    return xrplProofData.value.trim().length > 0
+  } else if (paymentMethod.value === 'flr') {
+    return true // Direct payment, no pre-checks needed
+  }
+
+  return false
 })
 
 // Check upload permission (read-only check)
@@ -701,20 +738,9 @@ const uploadDocument = async () => {
     let receipt: any
 
     try {
-      console.log('✅ Using simplified XRPL-only upload path')
+      console.log('✅ Using hybrid contract with payment method:', paymentMethod.value)
 
-      // Prepare XRPL proof data
-      if (!xrplProofData.value.trim()) {
-        throw new Error('XRPL payment proof is required. Enter any text (MockFDC accepts all proofs)')
-      }
-
-      const proofText = xrplProofData.value.trim()
-      const mockProofId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(proofText))
-      const mockStatementId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(`patient_${Date.now()}`))
-      const proofBytes = ethers.utils.toUtf8Bytes(proofText)
-
-      // Get required drops from contract
-      uploadStatus.value = 'Checking payment requirements...'
+      // Prepare fresh contract instance
       const freshProvider = new ethers.providers.Web3Provider(window.ethereum, 'any')
       await freshProvider.ready
       const freshSigner = freshProvider.getSigner()
@@ -724,32 +750,73 @@ const uploadDocument = async () => {
         freshSigner
       )
 
-      const requiredInfo = await freshContract.requiredXrpDrops()
-      const requiredDrops = requiredInfo.drops
-
-      console.log('💰 Payment details:', {
-        patientId,
-        docKind,
-        ipfsUri,
-        requiredDrops: requiredDrops.toString(),
-        proofLength: proofBytes.length
-      })
-
-      uploadStatus.value = 'Submitting XRPL upload transaction...'
-
-      tx = await freshContract.uploadDocumentXRP(
-        patientId,
-        docKind,
-        ipfsUri,
-        proofBytes,
-        mockStatementId,
-        mockProofId,
-        requiredDrops,
-        {
-          gasLimit: 500000,
-          gasPrice: ethers.utils.parseUnits('25', 'gwei')
+      if (paymentMethod.value === 'xrpl') {
+        // XRPL Payment Path
+        if (!xrplProofData.value.trim()) {
+          throw new Error('XRPL payment proof is required. Enter any text (MockFDC accepts all proofs)')
         }
-      )
+
+        const proofText = xrplProofData.value.trim()
+        const mockProofId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(proofText))
+        const mockStatementId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(`patient_${Date.now()}`))
+        const proofBytes = ethers.utils.toUtf8Bytes(proofText)
+
+        // Use hardcoded XRPL drops to avoid browser issues
+        uploadStatus.value = 'Preparing XRPL payment...'
+        const requiredDrops = '5000000' // 5M drops hardcoded
+
+        console.log('💰 XRPL Payment details:', {
+          patientId,
+          docKind,
+          ipfsUri,
+          requiredDrops: requiredDrops.toString(),
+          proofLength: proofBytes.length
+        })
+
+        uploadStatus.value = 'Submitting XRPL upload transaction...'
+
+        tx = await freshContract.uploadDocumentXRP(
+          patientId,
+          docKind,
+          ipfsUri,
+          proofBytes,
+          mockStatementId,
+          mockProofId,
+          requiredDrops,
+          {
+            gasLimit: 500000,
+            gasPrice: ethers.utils.parseUnits('25', 'gwei')
+          }
+        )
+
+      } else if (paymentMethod.value === 'flr') {
+        // FLR Direct Payment Path (using hardcoded fee to avoid browser issues)
+        uploadStatus.value = 'Preparing FLR payment...'
+        const uploadFee = ethers.utils.parseEther('0.001') // 0.001 FLR hardcoded
+
+        console.log('💰 FLR Payment details:', {
+          patientId,
+          docKind,
+          ipfsUri,
+          fee: '0.001 FLR'
+        })
+
+        uploadStatus.value = 'Submitting FLR upload transaction...'
+
+        tx = await freshContract.uploadDocumentFLR(
+          patientId,
+          docKind,
+          ipfsUri,
+          {
+            value: uploadFee, // Send 0.001 FLR payment with transaction
+            gasLimit: 350000,
+            gasPrice: ethers.utils.parseUnits('25', 'gwei')
+          }
+        )
+
+      } else {
+        throw new Error('Invalid payment method selected')
+      }
 
       // Wait for transaction receipt
       uploadStatus.value = 'Waiting for transaction confirmation...'
@@ -835,7 +902,7 @@ Click "Register as Patient" below to register first.`,
       mrn: mrn.value,
       salt: salt.value,
       encryptionKey: encryptionKey.value, // Store for download
-      paymentMethod: 'xrpl',
+      paymentMethod: paymentMethod.value,
       timestamp: new Date().toISOString()
     }
 
@@ -1039,7 +1106,8 @@ input, select, textarea {
 }
 
 .balance-info,
-.xrpl-fields {
+.xrpl-fields,
+.flr-fields {
   background: #f8f9fa;
   padding: 1rem;
   border-radius: 4px;

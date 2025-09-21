@@ -48,6 +48,13 @@ contract SimpleMedicalVault {
         uint256 paidDrops,
         bytes32 proofHash
     );
+    event UploadPaidFLR(
+        bytes32 indexed patientId,
+        uint8   indexed kind,
+        address indexed payer,
+        uint256 version,
+        uint256 amountWei
+    );
     event DocumentRead(bytes32 indexed patientId, uint8 indexed kind, address accessor);
 
     event FtsoSet(address indexed ftso);
@@ -61,6 +68,7 @@ contract SimpleMedicalVault {
 
     constructor() {
         owner = msg.sender;
+        feeCollector = msg.sender;
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
@@ -78,9 +86,13 @@ contract SimpleMedicalVault {
     // Optional insurer metadata (doesn't affect permissions)
     mapping(bytes32 => InsurerInfo) public insurerInfo;
 
-    // XRPL payment settings
-    uint256 public uploadFeeUSDc = 500;  // $5.00 in cents
+    // Payment settings
+    uint256 public uploadFeeUSDc = 500;  // $5.00 in cents for XRPL
+    uint256 public uploadFeeWei = 0.001 ether;  // 0.001 FLR for direct payment
     uint256 public maxOracleStaleness = 10 minutes;
+
+    // Fee collection
+    address public feeCollector;
 
     // Oracles
     IFDC  public fdc;
@@ -100,6 +112,16 @@ contract SimpleMedicalVault {
     function setUploadFeeUSDc(uint256 feeUSDc) external onlyOwner {
         uploadFeeUSDc = feeUSDc;
         emit FeesUpdated(feeUSDc);
+    }
+
+    function setUploadFeeFLR(uint256 feeWei) external onlyOwner {
+        uploadFeeWei = feeWei;
+        emit FeesUpdated(feeWei);
+    }
+
+    function setFeeCollector(address collector) external onlyOwner {
+        require(collector != address(0), "zero address");
+        feeCollector = collector;
     }
 
     function setMaxOracleStaleness(uint256 seconds_) external onlyOwner {
@@ -149,6 +171,42 @@ contract SimpleMedicalVault {
         d.currencyHash = keccak256("XRP|native"); // XRP is native currency
 
         emit UploadPaidXRPLXRP(patientId, kind, d.version, xrplPaidDrops, proofId);
+    }
+
+    /**
+     * Direct FLR payment upload: Insurer pays fee directly with transaction
+     * Fee amount sent as msg.value, no balance management needed
+     */
+    function uploadDocumentFLR(
+        bytes32 patientId,
+        uint8   kind,                // 0=Diagnosis, 1=Referral, 2=Intake
+        string  calldata hashURI     // encrypted IPFS CID/URI
+    ) external payable {
+        // 1. Verify sufficient payment sent
+        require(msg.value >= uploadFeeWei, "insufficient FLR payment");
+
+        // 2. Write document (no ACL checks)
+        _writeDoc(patientId, kind, hashURI);
+
+        // 3. Transfer fee to collector, refund excess
+        uint256 excess = msg.value - uploadFeeWei;
+
+        (bool success,) = payable(feeCollector).call{value: uploadFeeWei}("");
+        require(success, "fee transfer failed");
+
+        if (excess > 0) {
+            (bool refundSuccess,) = payable(msg.sender).call{value: excess}("");
+            require(refundSuccess, "refund failed");
+        }
+
+        // 4. Mark as paid and emit event
+        DocMeta storage d = docs[patientId][kind];
+        paidVersion[patientId][kind] = d.version;
+        d.paymentProof = bytes32(0); // FLR marker
+        d.paidDrops = 0;
+        d.currencyHash = keccak256("FLR|native");
+
+        emit UploadPaidFLR(patientId, kind, msg.sender, d.version, uploadFeeWei);
     }
 
     /* ──────────────── Internal helpers ──────────────── */
