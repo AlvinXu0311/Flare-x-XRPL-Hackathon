@@ -1,8 +1,8 @@
 const multer = require('multer')
 const path = require('path')
 const crypto = require('crypto')
-const { Document, Patient, AccessLog } = require('../models')
-const ipfsService = require('../services/ipfsService')
+const { Document, Patient, User, AccessLog } = require('../models')
+// const ipfsService = require('../services/ipfsService') // DISABLED - Not using IPFS
 const blockchainService = require('../services/blockchainService')
 const logger = require('../utils/logger')
 const fs = require('fs').promises
@@ -78,19 +78,27 @@ class DocumentController {
       // Generate file hash
       const fileHash = crypto.createHash('sha256').update(encryptedBuffer).digest('hex')
 
-      // Upload to IPFS
-      logger.info('Uploading document to IPFS', {
+      // Store file locally (replacing IPFS)
+      logger.info('Storing document locally', {
         patientId,
         documentType,
         filename: file.originalname
       })
 
-      const ipfsResult = await ipfsService.uploadFile(
-        encryptedBuffer,
-        `${patientId}-${documentType}-${Date.now()}-${file.originalname}`
-      )
+      const localFilename = `${patientId}-${documentType}-${Date.now()}-${file.originalname}`
+      const storageDir = process.env.STORAGE_DIR || './storage/documents'
 
-      const ipfsURI = `ipfs://${ipfsResult.cid}`
+      // Ensure storage directory exists
+      await fs.mkdir(storageDir, { recursive: true })
+
+      const localFilePath = path.join(storageDir, localFilename)
+      await fs.writeFile(localFilePath, encryptedBuffer)
+
+      // Create a local URI instead of IPFS
+      const localURI = `local://${localFilename}`
+
+      // Mock IPFS result for compatibility
+      const ipfsResult = { cid: fileHash } // Use file hash as CID
 
       // Create database record
       const document = await Document.create({
@@ -102,7 +110,7 @@ class DocumentController {
         fileType: path.extname(file.originalname).slice(1),
         fileSize: file.size,
         ipfsCid: ipfsResult.cid,
-        ipfsURI,
+        ipfsURI: localURI,
         encryptionHash: fileHash,
         uploadedBy: req.user.id,
         status: 'processing',
@@ -124,7 +132,7 @@ class DocumentController {
         const blockchainResult = await blockchainService.uploadDocument(
           patientId,
           parseInt(documentType),
-          ipfsURI
+          localURI
         )
 
         // Update document with blockchain info
@@ -253,13 +261,18 @@ class DocumentController {
         }
       }
 
-      // Download from IPFS
-      logger.info('Downloading document from IPFS', {
+      // Download from local storage
+      logger.info('Downloading document from local storage', {
         documentId: document.id,
         ipfsCid: document.ipfsCid
       })
 
-      const encryptedBuffer = await ipfsService.downloadFile(document.ipfsCid)
+      // Extract filename from URI
+      const filename = document.ipfsURI.replace('local://', '')
+      const storageDir = process.env.STORAGE_DIR || './storage/documents'
+      const localFilePath = path.join(storageDir, filename)
+
+      const encryptedBuffer = await fs.readFile(localFilePath)
 
       // Decrypt file
       const encryptionKey = Buffer.from(document.metadata.encryptionKey, 'hex')
@@ -470,6 +483,10 @@ class DocumentController {
 const controller = new DocumentController()
 
 module.exports = {
-  ...controller,
+  uploadDocument: controller.uploadDocument.bind(controller),
+  downloadDocument: controller.downloadDocument.bind(controller),
+  getDocument: controller.getDocument.bind(controller),
+  listDocuments: controller.listDocuments.bind(controller),
+  getBlockchainDocument: controller.getBlockchainDocument.bind(controller),
   uploadMiddleware: upload.single('file')
 }

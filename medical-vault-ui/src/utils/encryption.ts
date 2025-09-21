@@ -368,7 +368,8 @@ export async function deriveKeyFromWallet(
 ): Promise<string> {
   try {
     // Create a deterministic message for signing
-    const message = `Medical Vault Encryption Key\nPatient ID: ${patientId}\nSalt: ${salt}\nTimestamp: ${Date.now()}`
+    const timestamp = Math.floor(Date.now() / 10000) * 10000 // Round to 10-second intervals for consistency
+    const message = `Medical Vault Encryption Key\nPatient ID: ${patientId}\nSalt: ${salt}\nTimestamp: ${timestamp}`
 
     // Sign the message with the wallet
     const signature = await signer.signMessage(message)
@@ -378,7 +379,9 @@ export async function deriveKeyFromWallet(
 
     return key
   } catch (error) {
-    throw new Error(`Failed to derive key from wallet: ${error}`)
+    console.error('Wallet key derivation error:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    throw new Error(`Failed to derive key from wallet: ${errorMessage}`)
   }
 }
 
@@ -449,6 +452,133 @@ export async function decryptFileWithWallet(
     return typedArray.buffer
   } catch (error) {
     throw new Error(`Wallet decryption failed: ${error}`)
+  }
+}
+
+/**
+ * Encrypt text using wallet-derived key
+ */
+export async function encryptTextWithWallet(
+  textContent: string,
+  signer: any,
+  patientId: string,
+  salt: string
+): Promise<{encryptedContent: string, metadata: any}> {
+  try {
+    // Derive key from wallet signature
+    const walletKey = await deriveKeyFromWallet(signer, patientId, salt)
+
+    // Encrypt using the wallet-derived key
+    const encrypted = CryptoJS.AES.encrypt(textContent, walletKey).toString()
+
+    // Create metadata for verification
+    const metadata = {
+      patientId,
+      salt,
+      walletAddress: await signer.getAddress(),
+      encryptedAt: Date.now(),
+      keyDerivationMethod: 'wallet-signature',
+      contentType: 'text'
+    }
+
+    return {
+      encryptedContent: encrypted,
+      metadata
+    }
+  } catch (error) {
+    throw new Error(`Wallet text encryption failed: ${error}`)
+  }
+}
+
+/**
+ * Decrypt text using wallet signature verification
+ */
+export async function decryptTextWithWallet(
+  encryptedContent: string,
+  signer: any,
+  metadata: any
+): Promise<string> {
+  try {
+    // Verify wallet address matches
+    const currentAddress = await signer.getAddress()
+    if (currentAddress.toLowerCase() !== metadata.walletAddress.toLowerCase()) {
+      throw new Error('Wallet address mismatch - you are not authorized to decrypt this content')
+    }
+
+    // Derive the same key using wallet signature
+    const walletKey = await deriveKeyFromWallet(signer, metadata.patientId, metadata.salt)
+
+    // Decrypt
+    const decrypted = CryptoJS.AES.decrypt(encryptedContent, walletKey)
+    const decryptedText = decrypted.toString(CryptoJS.enc.Utf8)
+
+    if (!decryptedText) {
+      throw new Error('Decryption failed - invalid key or corrupted data')
+    }
+
+    return decryptedText
+  } catch (error) {
+    throw new Error(`Wallet text decryption failed: ${error}`)
+  }
+}
+
+/**
+ * Generate SHA-256 hash of file content
+ */
+export async function generateFileHash(fileContent: ArrayBuffer): Promise<string> {
+  try {
+    // Use Web Crypto API to generate SHA-256 hash
+    const hashBuffer = await crypto.subtle.digest('SHA-256', fileContent)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    return `0x${hashHex}`
+  } catch (error) {
+    throw new Error(`File hash generation failed: ${error}`)
+  }
+}
+
+/**
+ * Generate SHA-256 hash of text content
+ */
+export async function generateTextHash(textContent: string): Promise<string> {
+  try {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(textContent)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    return `0x${hashHex}`
+  } catch (error) {
+    throw new Error(`Text hash generation failed: ${error}`)
+  }
+}
+
+/**
+ * Create a content URI with hash for blockchain storage
+ */
+export function createContentURI(hash: string, contentType: 'file' | 'text', filename?: string): string {
+  const metadata = {
+    hash,
+    type: contentType,
+    filename: filename || 'document',
+    timestamp: Date.now()
+  }
+
+  // Create a simple URI format: hash://metadata
+  return `${hash}#${btoa(JSON.stringify(metadata))}`
+}
+
+/**
+ * Parse content URI to extract hash and metadata
+ */
+export function parseContentURI(uri: string): { hash: string; metadata: any } {
+  try {
+    const [hash, encodedMetadata] = uri.split('#')
+    const metadata = encodedMetadata ? JSON.parse(atob(encodedMetadata)) : {}
+    return { hash, metadata }
+  } catch (error) {
+    // Fallback for simple hash URIs
+    return { hash: uri, metadata: {} }
   }
 }
 

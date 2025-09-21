@@ -11,6 +11,7 @@ const path = require('path')
 const logger = require('./utils/logger')
 const routes = require('./routes')
 const { sequelize } = require('./models')
+// const { connectMongoDB } = require('./config/mongodb') // DISABLED - Using SQLite only
 
 // Create Express app
 const app = express()
@@ -187,14 +188,17 @@ const HOST = process.env.HOST || '0.0.0.0'
 
 async function startServer() {
   try {
-    // Test database connection
+    // Test database connection (PostgreSQL)
     await sequelize.authenticate()
-    logger.info('Database connection established successfully')
+    logger.info('SQLite database connection established successfully')
+
+    // MongoDB disabled - using SQLite only
+    logger.info('Using SQLite database only')
 
     // Sync database (only in development)
     if (process.env.NODE_ENV === 'development') {
       await sequelize.sync({ alter: true })
-      logger.info('Database synchronized')
+      logger.info('PostgreSQL database synchronized')
     }
 
     // Start HTTP server

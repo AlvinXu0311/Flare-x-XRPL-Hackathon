@@ -4,12 +4,8 @@ const { Sequelize } = require('sequelize')
 
 const config = {
   development: {
-    username: process.env.DB_USER || 'medical_vault_user',
-    password: process.env.DB_PASSWORD || 'secure_password',
-    database: process.env.DB_NAME || 'medical_vault_db',
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    dialect: 'postgres',
+    dialect: 'sqlite',
+    storage: process.env.DB_STORAGE || './medical-vault-dev.db',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     pool: {
       max: 5,
@@ -52,6 +48,13 @@ const dbConfig = config[env]
 let sequelize
 if (dbConfig.use_env_variable) {
   sequelize = new Sequelize(process.env[dbConfig.use_env_variable], dbConfig)
+} else if (dbConfig.dialect === 'sqlite') {
+  sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage: dbConfig.storage,
+    logging: dbConfig.logging,
+    pool: dbConfig.pool
+  })
 } else {
   sequelize = new Sequelize(
     dbConfig.database,

@@ -4,6 +4,7 @@ const documentRoutes = require('./documents')
 const patientRoutes = require('./patients')
 const blockchainRoutes = require('./blockchain')
 const healthRoutes = require('./health')
+const documentMappingRoutes = require('./documentMappingRoutes')
 
 const router = express.Router()
 
@@ -22,6 +23,9 @@ router.use('/patients', patientRoutes)
 // Blockchain interaction routes
 router.use('/blockchain', blockchainRoutes)
 
+// Document mapping routes (MongoDB)
+router.use('/mappings', documentMappingRoutes)
+
 // API info endpoint
 router.get('/', (req, res) => {
   res.json({
@@ -33,7 +37,8 @@ router.get('/', (req, res) => {
       auth: '/auth',
       documents: '/documents',
       patients: '/patients',
-      blockchain: '/blockchain'
+      blockchain: '/blockchain',
+      mappings: '/mappings'
     }
   })
 })

@@ -16,23 +16,16 @@
     "test:coverage": "vitest --coverage",
     "build-only": "vite build",
     "build:production": "NODE_ENV=production vite build",
-    "build:ipfs": "npm run build:production && echo 'Build ready for IPFS deployment'",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
-    "deploy:ipfs": "npm run build:ipfs && ipfs add -r dist/",
     "deploy:preview": "npm run build && npm run preview",
     "stop": "../stop.sh",
     "clean": "../stop.sh --clean"
   },
   "dependencies": {
-    "@helia/strings": "^4.1.0",
-    "@helia/unixfs": "^5.1.0",
     "crypto-js": "^4.2.0",
     "ethers": "^5.8.0",
-    "helia": "^5.5.1",
-    "ipfs-http-client": "^60.0.1",
-    "ipfs-core": "^0.18.1",
     "pinia": "^3.0.3",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"

@@ -1,77 +1,132 @@
 <template>
   <div class="document-download">
-    <h2>Download Medical Document</h2>
+    <h2>View Medical Documents</h2>
 
     <!-- Your Uploaded Documents -->
     <div class="uploaded-documents">
-      <h3>📄 Your Uploaded Documents</h3>
-      <p>Documents you've uploaded with your wallet:</p>
+      <h3>📄 Your Stored Documents</h3>
+      <p>Documents you've stored on the blockchain with your wallet:</p>
 
       <div v-if="userDocuments.length === 0" class="no-documents">
-        <p>No documents found. Upload some documents first!</p>
+        <p>No documents found. Store some documents first!</p>
       </div>
 
       <div v-else class="documents-list">
         <div
           v-for="doc in userDocuments"
-          :key="doc.ipfsHash"
+          :key="doc.txHash"
           class="document-card"
         >
           <div class="doc-info">
-            <h4>{{ doc.filename }}</h4>
+            <h4>{{ doc.filename || 'Document' }}</h4>
             <p><strong>Type:</strong> {{ getDocTypeName(doc.docType) }}</p>
-            <p><strong>Uploaded:</strong> {{ formatDate(doc.uploadDate) }}</p>
-            <p><strong>IPFS Hash:</strong> {{ doc.ipfsHash }}</p>
+            <p><strong>Content Type:</strong> {{ doc.contentType || 'text' }}</p>
+            <p><strong>Stored:</strong> {{ formatDate(doc.uploadDate) }}</p>
+            <p><strong>Content Hash:</strong> {{ doc.contentHash }}</p>
+            <p><strong>Tx Hash:</strong> {{ doc.txHash }}</p>
           </div>
 
           <div class="doc-actions">
             <button
-              @click="downloadDocument(doc)"
-              :disabled="isDownloading[doc.ipfsHash]"
-              class="download-btn"
+              @click="viewDocument(doc)"
+              :disabled="isViewing[doc.txHash]"
+              class="view-btn"
             >
-              {{ isDownloading[doc.ipfsHash] ? 'Downloading...' : '📥 Download & Decrypt' }}
+              {{ isViewing[doc.txHash] ? 'Decrypting...' : (doc.contentType === 'file' ? '📥 Download File' : '📄 View Text') }}
             </button>
-            <button @click="viewOnIPFS(doc.ipfsHash)" class="view-btn">
-              🌐 View on IPFS
+            <button @click="viewOnBlockchain(doc.txHash)" class="blockchain-btn">
+              🔗 View on Blockchain
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Manual IPFS Hash Download -->
-    <div class="manual-download">
-      <h3>🔍 Download by IPFS Hash</h3>
-      <p>Enter an IPFS hash if you have a document link:</p>
+    <!-- Manual Document Lookup -->
+    <div class="manual-lookup">
+      <h3>🔍 Look up Document by Patient ID</h3>
+      <p>Enter patient information to retrieve documents:</p>
 
       <div class="input-group">
-        <label for="ipfsHash">IPFS Hash:</label>
+        <label for="lookupMrn">Medical Record Number (MRN):</label>
         <input
-          id="ipfsHash"
-          v-model="manualIpfsHash"
+          id="lookupMrn"
+          v-model="lookupMrn"
           type="text"
-          placeholder="Enter IPFS hash (without ipfs:// prefix)"
+          placeholder="Enter MRN"
         />
       </div>
 
-      <div class="wallet-decrypt-info">
-        <h4>🔐 Wallet-Based Decryption</h4>
-        <p>This will use your wallet signature to decrypt the document. Only the wallet that uploaded it can decrypt.</p>
+      <div class="input-group">
+        <label for="lookupSalt">Salt:</label>
+        <input
+          id="lookupSalt"
+          v-model="lookupSalt"
+          type="text"
+          placeholder="Enter salt value"
+        />
+      </div>
+
+      <div class="blockchain-decrypt-info">
+        <h4>🔐 Blockchain Retrieval</h4>
+        <p>This will retrieve documents from the blockchain and attempt to decrypt them with your wallet signature.</p>
       </div>
 
       <button
-        @click="downloadManualHash"
-        :disabled="!manualIpfsHash || isManualDownloading"
-        class="download-btn"
+        @click="lookupDocuments"
+        :disabled="!lookupMrn || !lookupSalt || isLookingUp"
+        class="lookup-btn"
       >
-        {{ isManualDownloading ? 'Downloading...' : '📥 Download & Decrypt' }}
+        {{ isLookingUp ? 'Looking up...' : '🔍 Look up Documents' }}
       </button>
     </div>
 
-    <!-- Download Status -->
-    <div v-if="downloadStatus" class="download-status">
-      <p>{{ downloadStatus }}</p>
+    <!-- Viewed Document Content -->
+    <div v-if="viewedDocument" class="viewed-document">
+      <h3>📄 {{ viewedDocument.filename }}</h3>
+      <div class="document-meta">
+        <p><strong>Type:</strong> {{ viewedDocument.type }}</p>
+        <p><strong>Date:</strong> {{ viewedDocument.date }}</p>
+        <p><strong>Hash:</strong> {{ viewedDocument.hash }}</p>
+      </div>
+      <div class="document-content">
+        <pre>{{ viewedDocument.content }}</pre>
+      </div>
+      <button @click="viewedDocument = null" class="close-btn">Close</button>
+    </div>
+
+    <!-- Local Storage Info -->
+    <div class="storage-info">
+      <h3>💾 Local Storage Information</h3>
+      <div v-if="storageInfo" class="storage-details">
+        <div class="storage-item">
+          <span class="label">Files Stored:</span>
+          <span class="value">{{ storageInfo.fileCount }}</span>
+        </div>
+        <div class="storage-item">
+          <span class="label">Storage Used:</span>
+          <span class="value">{{ formatFileSize(storageInfo.usage) }}</span>
+        </div>
+        <div class="storage-item">
+          <span class="label">Storage Quota:</span>
+          <span class="value">{{ formatFileSize(storageInfo.quota) }}</span>
+        </div>
+        <div class="storage-item">
+          <span class="label">Usage:</span>
+          <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: storagePercentage + '%' }"></div>
+          </div>
+          <span class="value">{{ storagePercentage.toFixed(1) }}%</span>
+        </div>
+      </div>
+      <button @click="refreshStorageInfo" class="refresh-btn">
+        🔄 Refresh Storage Info
+      </button>
+    </div>
+
+    <!-- Status Display -->
+    <div v-if="status" class="status">
+      <p>{{ status }}</p>
     </div>
 
     <!-- Error Display -->
@@ -84,9 +139,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { ethers } from 'ethers'
-import { decryptFileWithWallet } from '@/utils/encryption'
-import { ipfsToGatewayUrl } from '@/utils/ipfs'
-import { ipfsToGatewayUrlSimple } from '@/utils/ipfs-simple'
+import { decryptTextWithWallet, decryptFileWithWallet, hashPatientId, parseContentURI } from '@/utils/encryption'
+import { getStoredFileByTxHash, getAllStoredFiles, createDownloadBlob, formatFileSize, getLocalStorageInfo } from '@/utils/local-storage'
+import { mappingService } from '@/utils/mapping-service'
 
 // Props
 interface Props {
@@ -99,11 +154,14 @@ const props = defineProps<Props>()
 
 // Reactive state
 const userDocuments = ref<any[]>([])
-const manualIpfsHash = ref('')
-const isDownloading = ref<Record<string, boolean>>({})
-const isManualDownloading = ref(false)
-const downloadStatus = ref('')
+const lookupMrn = ref('')
+const lookupSalt = ref('')
+const isViewing = ref<Record<string, boolean>>({})
+const isLookingUp = ref(false)
+const viewedDocument = ref<any>(null)
+const status = ref('')
 const error = ref('')
+const storageInfo = ref<any>(null)
 
 // Document type names
 const getDocTypeName = (type: string | number): string => {
@@ -120,165 +178,249 @@ const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString()
 }
 
-// Load user's uploaded documents from localStorage
-const loadUserDocuments = () => {
+// Load user's uploaded documents from localStorage and database
+const loadUserDocuments = async () => {
   try {
-    const uploads = JSON.parse(localStorage.getItem('medicalVaultUploads') || '[]')
+    console.log('🔄 Loading user documents from local storage and database...')
+
+    // Get documents from localStorage (legacy)
+    const localUploads = JSON.parse(localStorage.getItem('medicalVaultUploads') || '[]')
+    console.log('Local uploads found:', localUploads.length)
 
     // Filter documents uploaded by current wallet
-    userDocuments.value = uploads.filter((doc: any) =>
+    const localDocs = localUploads.filter((doc: any) =>
       doc.metadata?.walletAddress?.toLowerCase() === props.account.toLowerCase()
     )
+
+    // Try to get documents from database as well
+    let dbDocs: any[] = []
+    try {
+      console.log('🔄 Fetching documents from database...')
+      const mappings = await mappingService.getMappingsByWallet(props.account.toLowerCase())
+
+      // Convert database mappings to the format expected by the UI
+      dbDocs = mappings.map((mapping: any) => ({
+        fileId: mapping.localFileId,
+        filename: mapping.fileName,
+        contentType: mapping.contentType.includes('text') ? 'text' : 'file',
+        contentHash: mapping.contentHash,
+        contentURI: mapping.contentURI,
+        patientId: mapping.patientId,
+        docType: mapping.docType.toString(),
+        uploadDate: mapping.uploadDate,
+        encryptionMethod: mapping.encryptionMethod || 'wallet-signature',
+        txHash: mapping.txHash,
+        version: mapping.version,
+        blockNumber: mapping.blockNumber,
+        gasUsed: mapping.gasUsed
+      }))
+
+      console.log(`✅ Retrieved ${dbDocs.length} documents from database`)
+    } catch (dbError) {
+      console.warn('⚠️ Failed to fetch documents from database (using local only):', dbError)
+    }
+
+    // Merge and deduplicate documents (database takes priority over localStorage)
+    const allDocs = [...dbDocs]
+
+    // Add local docs that aren't already in database
+    for (const localDoc of localDocs) {
+      const existsInDb = dbDocs.some(dbDoc => dbDoc.txHash === localDoc.txHash)
+      if (!existsInDb) {
+        allDocs.push(localDoc)
+      }
+    }
+
+    userDocuments.value = allDocs
+    console.log(`✅ Total documents loaded: ${allDocs.length}`)
+
   } catch (error) {
-    console.error('Error loading user documents:', error)
+    console.error('❌ Failed to load user documents:', error)
     userDocuments.value = []
   }
 }
 
-// Download and decrypt document
-const downloadDocument = async (doc: any) => {
+// View document content
+const viewDocument = async (doc: any) => {
   if (!props.isConnected || !window.ethereum) {
     error.value = 'Wallet not connected'
     return
   }
 
-  isDownloading.value[doc.ipfsHash] = true
+  isViewing.value[doc.txHash] = true
   error.value = ''
-  downloadStatus.value = 'Downloading from IPFS...'
+  status.value = 'Retrieving stored file...'
 
   try {
-    // Get wallet signer
-    const provider = new ethers.providers.Web3Provider(window.ethereum)
-    const signer = provider.getSigner()
-
-    // Download from IPFS
-    const response = await fetch(getIPFSUrl(doc.ipfsHash))
-    if (!response.ok) {
-      throw new Error('Failed to download from IPFS')
-    }
-
-    const encryptedContent = await response.text()
-    downloadStatus.value = 'Decrypting with wallet signature...'
-
-    // Decrypt using wallet
-    const decryptedBuffer = await decryptFileWithWallet(
-      encryptedContent,
-      signer,
-      doc.metadata
-    )
-
-    downloadStatus.value = 'Download complete!'
-
-    // Create download link
-    const blob = new Blob([decryptedBuffer])
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = doc.filename || 'medical-document.pdf'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    setTimeout(() => {
-      downloadStatus.value = ''
-    }, 3000)
-
-  } catch (err: any) {
-    console.error('Download failed:', err)
-    error.value = `Download failed: ${err.message}`
-  } finally {
-    isDownloading.value[doc.ipfsHash] = false
-  }
-}
-
-// Download by manual IPFS hash
-const downloadManualHash = async () => {
-  if (!props.isConnected || !window.ethereum) {
-    error.value = 'Wallet not connected'
-    return
-  }
-
-  isManualDownloading.value = true
-  error.value = ''
-  downloadStatus.value = 'Downloading from IPFS...'
-
-  try {
-    // Get wallet signer
-    const provider = new ethers.providers.Web3Provider(window.ethereum)
-    const signer = provider.getSigner()
-
-    // Download from IPFS
-    const response = await fetch(getIPFSUrl(manualIpfsHash.value))
-    if (!response.ok) {
-      throw new Error('Failed to download from IPFS')
-    }
-
-    const encryptedContent = await response.text()
-    downloadStatus.value = 'Attempting wallet decryption...'
-
-    // Try to decrypt - this might fail if user doesn't own the document
-    // For manual downloads, we need to guess the metadata structure
-    const metadata = {
-      walletAddress: props.account,
-      patientId: 'unknown', // We don't know this
-      salt: 'unknown' // We don't know this either
-    }
+    // Get wallet signer with error handling for proxy issues
+    let provider: ethers.providers.Web3Provider
+    let signer: ethers.providers.JsonRpcSigner
 
     try {
-      const decryptedBuffer = await decryptFileWithWallet(
-        encryptedContent,
+      provider = new ethers.providers.Web3Provider(window.ethereum, "any")
+      signer = provider.getSigner()
+
+      // Test signer to ensure it's working
+      await signer.getAddress()
+    } catch (providerError) {
+      console.error('Provider/signer error:', providerError)
+      // Try again with a fresh provider
+      await new Promise(resolve => setTimeout(resolve, 100))
+      provider = new ethers.providers.Web3Provider(window.ethereum, "any")
+      signer = provider.getSigner()
+    }
+
+    // Get stored file from IndexedDB
+    const storedFile = await getStoredFileByTxHash(doc.txHash)
+    if (!storedFile) {
+      throw new Error('File not found in local storage. Document may need to be re-uploaded.')
+    }
+
+    status.value = 'Decrypting with wallet signature...'
+
+    // Decrypt content based on type
+    if (storedFile.contentType.startsWith('text/') || doc.contentType === 'text') {
+      // Decrypt text content
+      const decryptedText = await decryptTextWithWallet(
+        storedFile.encryptedContent as string,
         signer,
-        metadata
+        storedFile.metadata
       )
 
-      downloadStatus.value = 'Download complete!'
+      viewedDocument.value = {
+        content: decryptedText,
+        type: getDocTypeName(doc.docType),
+        date: formatDate(doc.uploadDate),
+        filename: storedFile.filename,
+        hash: storedFile.contentHash
+      }
+
+      status.value = 'Text decrypted and displayed successfully!'
+
+    } else {
+      // Decrypt file content
+      const decryptedBuffer = await decryptFileWithWallet(
+        storedFile.encryptedContent as string,
+        signer,
+        storedFile.metadata
+      )
 
       // Create download link
-      const blob = new Blob([decryptedBuffer])
+      const blob = createDownloadBlob(decryptedBuffer, storedFile.contentType)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'medical-document.pdf'
+      a.download = storedFile.filename || 'medical-document'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
 
-    } catch (decryptError) {
-      throw new Error('Decryption failed - you may not be authorized to access this document')
+      status.value = `File "${storedFile.filename}" downloaded successfully!`
     }
 
     setTimeout(() => {
-      downloadStatus.value = ''
+      status.value = ''
     }, 3000)
 
   } catch (err: any) {
-    console.error('Manual download failed:', err)
-    error.value = `Download failed: ${err.message}`
+    console.error('View failed:', err)
+    error.value = `Failed to access document: ${err.message}`
   } finally {
-    isManualDownloading.value = false
+    isViewing.value[doc.txHash] = false
   }
 }
 
-// View document on IPFS gateway
-const viewOnIPFS = (hash: string) => {
-  const url = getIPFSUrl(hash)
+// Look up documents from blockchain
+const lookupDocuments = async () => {
+  if (!props.isConnected || !window.ethereum) {
+    error.value = 'Wallet not connected'
+    return
+  }
+
+  isLookingUp.value = true
+  error.value = ''
+  status.value = 'Looking up documents on blockchain...'
+
+  try {
+    const patientId = hashPatientId(lookupMrn.value, lookupSalt.value)
+
+    // Query blockchain for documents
+    status.value = 'Querying smart contract...'
+
+    // Get document count for this patient
+    const count = await props.contract.getDocumentCount(patientId)
+
+    if (count.eq(0)) {
+      status.value = 'No documents found for this patient ID'
+      return
+    }
+
+    status.value = `Found ${count.toString()} document(s). Loading...`
+
+    // Get all documents for this patient
+    const documents = []
+    for (let i = 0; i < count.toNumber(); i++) {
+      const doc = await props.contract.getDocument(patientId, i)
+
+      // Parse the content URI to get hash and metadata
+      const { hash, metadata } = parseContentURI(doc.ipfsHash)
+
+      documents.push({
+        patientId,
+        docType: doc.docType.toString(),
+        contentHash: hash,
+        contentURI: doc.ipfsHash,
+        filename: metadata.filename || 'Document',
+        contentType: metadata.type || 'text',
+        version: doc.version.toString(),
+        uploadDate: new Date(doc.timestamp.toNumber() * 1000).toISOString(),
+        txHash: 'blockchain-lookup-' + i // Placeholder
+      })
+    }
+
+    status.value = `Successfully retrieved ${documents.length} document(s)`
+
+    // Add to user documents for display
+    userDocuments.value = [...userDocuments.value, ...documents]
+
+    setTimeout(() => {
+      status.value = ''
+    }, 3000)
+
+  } catch (err: any) {
+    console.error('Lookup failed:', err)
+    error.value = `Lookup failed: ${err.message}`
+  } finally {
+    isLookingUp.value = false
+  }
+}
+
+// View transaction on blockchain explorer
+const viewOnBlockchain = (txHash: string) => {
+  const url = `https://coston2-explorer.flare.network/tx/${txHash}`
   window.open(url, '_blank')
 }
 
-// Get IPFS URL
-const getIPFSUrl = (hash: string): string => {
+// Computed storage percentage
+const storagePercentage = computed(() => {
+  if (!storageInfo.value || storageInfo.value.quota === 0) return 0
+  return (storageInfo.value.usage / storageInfo.value.quota) * 100
+})
+
+// Refresh storage info
+const refreshStorageInfo = async () => {
   try {
-    return ipfsToGatewayUrl(hash)
-  } catch {
-    return ipfsToGatewayUrlSimple(hash)
+    storageInfo.value = await getLocalStorageInfo()
+  } catch (error) {
+    console.error('Failed to get storage info:', error)
   }
 }
 
 // Load documents when component mounts
 onMounted(() => {
   loadUserDocuments()
+  refreshStorageInfo()
 })
 
 // Watch for account changes
@@ -294,7 +436,7 @@ watch(() => props.account, () => {
   padding: 2rem;
 }
 
-.uploaded-documents, .manual-download {
+.uploaded-documents, .manual-lookup {
   background: white;
   border-radius: 8px;
   padding: 2rem;
@@ -345,7 +487,7 @@ watch(() => props.account, () => {
   flex-direction: column;
 }
 
-.download-btn, .view-btn {
+.view-btn, .blockchain-btn, .lookup-btn, .close-btn {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 4px;
@@ -357,30 +499,55 @@ watch(() => props.account, () => {
   min-width: 180px;
 }
 
-.download-btn {
+.view-btn {
   background: #27ae60;
   color: white;
 }
 
-.download-btn:hover:not(:disabled) {
+.view-btn:hover:not(:disabled) {
   background: #219a52;
   transform: translateY(-2px);
 }
 
-.download-btn:disabled {
+.view-btn:disabled {
   background: #bdc3c7;
   cursor: not-allowed;
   transform: none;
 }
 
-.view-btn {
+.blockchain-btn {
   background: #3498db;
   color: white;
 }
 
-.view-btn:hover {
+.blockchain-btn:hover {
   background: #2980b9;
   transform: translateY(-2px);
+}
+
+.lookup-btn {
+  background: #9b59b6;
+  color: white;
+  width: 100%;
+}
+
+.lookup-btn:hover:not(:disabled) {
+  background: #8e44ad;
+}
+
+.lookup-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.close-btn {
+  background: #e74c3c;
+  color: white;
+  margin-top: 1rem;
+}
+
+.close-btn:hover {
+  background: #c0392b;
 }
 
 .input-group {
@@ -402,7 +569,7 @@ watch(() => props.account, () => {
   font-size: 1rem;
 }
 
-.wallet-decrypt-info {
+.blockchain-decrypt-info {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1rem;
@@ -410,16 +577,52 @@ watch(() => props.account, () => {
   margin: 1rem 0;
 }
 
-.wallet-decrypt-info h4 {
+.blockchain-decrypt-info h4 {
   margin: 0 0 0.5rem 0;
 }
 
-.wallet-decrypt-info p {
+.blockchain-decrypt-info p {
   margin: 0;
   opacity: 0.9;
 }
 
-.download-status {
+.viewed-document {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.document-content {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.document-meta {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.document-meta p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.document-content pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.status {
   background: #e8f5e8;
   color: #27ae60;
   padding: 1rem;
@@ -434,6 +637,73 @@ watch(() => props.account, () => {
   padding: 1rem;
   border-radius: 4px;
   margin-top: 1rem;
+}
+
+.storage-info {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.storage-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.storage-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.storage-item .label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 120px;
+}
+
+.storage-item .value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 10px;
+  margin: 0 1rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #28a745 0%, #ffc107 70%, #dc3545 90%);
+  transition: width 0.3s ease;
+}
+
+.refresh-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s;
+}
+
+.refresh-btn:hover {
+  background: #0056b3;
 }
 
 h2, h3 {
@@ -453,7 +723,7 @@ h2, h3 {
     justify-content: center;
   }
 
-  .download-btn, .view-btn {
+  .view-btn, .blockchain-btn {
     min-width: 140px;
   }
 }

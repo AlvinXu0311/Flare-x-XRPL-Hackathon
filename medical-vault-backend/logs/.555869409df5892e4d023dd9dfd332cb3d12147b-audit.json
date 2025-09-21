@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "logs/.555869409df5892e4d023dd9dfd332cb3d12147b-audit.json",
+    "files": [
+        {
+            "date": 1758426008559,
+            "name": "logs/medical-vault-2025-09-21.log",
+            "hash": "c75786f5341c8f805ee80a8a282d2001142a17a19ab3e79a2141add242544bfb"
+        }
+    ],
+    "hashType": "sha256"
+}

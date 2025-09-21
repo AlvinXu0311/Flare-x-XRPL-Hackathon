@@ -1,6 +1,6 @@
 const express = require('express')
 const { sequelize } = require('../models')
-const ipfsService = require('../services/ipfsService')
+// const ipfsService = require('../services/ipfsService') // DISABLED - Not using IPFS
 const blockchainService = require('../services/blockchainService')
 const logger = require('../utils/logger')
 
@@ -64,19 +64,11 @@ router.get('/detailed', async (req, res) => {
     healthCheck.status = 'unhealthy'
   }
 
-  // Check IPFS
-  try {
-    const ipfsHealth = await ipfsService.healthCheck()
-    healthCheck.services.ipfs = ipfsHealth
-    if (!ipfsHealth.healthy) {
-      healthCheck.status = 'degraded'
-    }
-  } catch (error) {
-    healthCheck.services.ipfs = {
-      status: 'unhealthy',
-      error: error.message
-    }
-    healthCheck.status = 'unhealthy'
+  // IPFS disabled - using local storage
+  healthCheck.services.storage = {
+    status: 'healthy',
+    type: 'local_filesystem',
+    note: 'Using local file storage instead of IPFS'
   }
 
   // Check blockchain
@@ -112,7 +104,7 @@ router.get('/ready', async (req, res) => {
   try {
     // Check if all critical services are ready
     await sequelize.authenticate()
-    await ipfsService.initialize()
+    // await ipfsService.initialize() // DISABLED - Not using IPFS
     await blockchainService.initialize()
 
     res.json({

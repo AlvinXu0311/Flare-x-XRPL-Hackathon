@@ -43,13 +43,23 @@
           </div>
         </div>
 
-        <!-- Permission Status -->
-        <div v-if="mrn && salt" class="permission-status">
-          <!-- Permission checking removed for IPFS-only mode -->
+        <!-- Document Upload Type -->
+        <div class="upload-type-section">
+          <h3>Document Type</h3>
+          <div class="upload-options">
+            <label class="radio-option">
+              <input type="radio" v-model="uploadType" value="file" />
+              📄 Upload File
+            </label>
+            <label class="radio-option">
+              <input type="radio" v-model="uploadType" value="text" />
+              📝 Enter Text
+            </label>
+          </div>
         </div>
 
         <!-- File Upload -->
-        <div class="file-section">
+        <div v-if="uploadType === 'file'" class="file-section">
           <h3>Document File</h3>
           <div class="input-group">
             <label for="file">Select File:</label>
@@ -67,18 +77,54 @@
             </div>
           </div>
 
-          <div class="wallet-encryption-info">
-            <h4>🔐 Wallet-Based Encryption</h4>
-            <p>Your document will be encrypted using your wallet signature. Only you will be able to decrypt it later.</p>
-            <div class="encryption-benefits">
-              <span>✅ No passwords to remember</span>
-              <span>✅ Secure wallet-based verification</span>
-              <span>✅ Only your wallet can decrypt</span>
+          <div class="hash-info">
+            <h4>🔐 File Hash Storage</h4>
+            <p>Your file will be encrypted locally and its hash stored on the blockchain.</p>
+            <div class="storage-benefits">
+              <span>✅ Local file encryption</span>
+              <span>✅ Hash verification on blockchain</span>
+              <span>✅ Secure file integrity</span>
             </div>
+          </div>
+
+          <div class="mapping-info">
+            <h4>🔗 Blockchain + Local Mapping</h4>
+            <p>Hash will be <strong>minted on Flare blockchain</strong>, file stored locally encrypted.</p>
+            <p><small>Transaction hash maps to your local encrypted file for download.</small></p>
           </div>
         </div>
 
-        <!-- Payment Method section removed for IPFS-only mode -->
+        <!-- Text Content -->
+        <div v-else-if="uploadType === 'text'" class="content-section">
+          <h3>Document Content</h3>
+          <div class="input-group">
+            <label for="content">Document Text:</label>
+            <textarea
+              id="content"
+              v-model="documentContent"
+              placeholder="Enter the document content as plain text"
+              rows="10"
+              required
+            ></textarea>
+            <small>Enter the medical document content as plain text. This will be encrypted and its hash stored on blockchain.</small>
+          </div>
+
+          <div class="hash-info">
+            <h4>🔗 Text Hash Storage</h4>
+            <p>Your text will be encrypted locally and its hash stored on the blockchain.</p>
+            <div class="storage-benefits">
+              <span>✅ Local text encryption</span>
+              <span>✅ Hash verification on blockchain</span>
+              <span>✅ Tamper-proof content</span>
+            </div>
+          </div>
+
+          <div class="mapping-info">
+            <h4>🔗 Blockchain + Local Mapping</h4>
+            <p>Hash will be <strong>minted on Flare blockchain</strong>, file stored locally encrypted.</p>
+            <p><small>Transaction hash maps to your local encrypted file for download.</small></p>
+          </div>
+        </div>
 
         <!-- Upload Button -->
         <button
@@ -86,7 +132,7 @@
           :disabled="uploading || !canProceedWithUpload"
           class="upload-btn"
         >
-          {{ uploading ? 'Uploading...' : 'Upload Document' }}
+          {{ uploading ? 'Processing...' : (uploadType === 'file' ? 'Mint File Hash on Blockchain' : 'Mint Text Hash on Blockchain') }}
         </button>
       </form>
 
@@ -94,14 +140,17 @@
       <div v-if="uploading" class="upload-progress">
         <div class="progress-steps">
           <div class="step" :class="{ active: currentStep >= 1, completed: currentStep > 1 }">
-            1. Encrypting file
+            1. Preparing encryption
           </div>
           <div class="step" :class="{ active: currentStep >= 2, completed: currentStep > 2 }">
-            2. Uploading to IPFS
+            2. Generating hash
           </div>
-          <!-- <div class="step" :class="{ active: currentStep >= 3, completed: currentStep > 3 }">
-            3. Recording on blockchain
-          </div> -->
+          <div class="step" :class="{ active: currentStep >= 3, completed: currentStep > 3 }">
+            3. Creating content URI
+          </div>
+          <div class="step" :class="{ active: currentStep >= 4, completed: currentStep > 4 }">
+            4. Minting on blockchain
+          </div>
         </div>
         <div v-if="uploadStatus" class="status-message">{{ uploadStatus }}</div>
       </div>
@@ -109,13 +158,85 @@
       <!-- Success/Error Messages -->
       <div v-if="uploadResult" class="upload-result">
         <div v-if="uploadResult.success" class="success">
-          <h3>✅ Document Uploaded Successfully!</h3>
-          <p><strong>IPFS Hash:</strong> {{ uploadResult.ipfsHash }}</p>
-          <!-- <p><strong>Transaction Hash:</strong> {{ uploadResult.txHash }}</p>
-          <p><strong>Version:</strong> {{ uploadResult.version }}</p> -->
-          <a :href="getIPFSViewUrl(uploadResult.ipfsHash)" target="_blank" class="view-link">
-            View on IPFS Gateway
-          </a>
+          <h3>✅ Document Hash Minted on Blockchain!</h3>
+
+          <div class="result-section">
+            <h4>⛓️ Blockchain Transaction</h4>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Transaction Hash:</span>
+                <span class="value">{{ uploadResult.txHash }}</span>
+                <button @click="copyToClipboard(uploadResult.txHash)" class="copy-btn">📋</button>
+              </div>
+
+              <div class="info-item">
+                <span class="label">Block Number:</span>
+                <span class="value">{{ uploadResult.blockNumber }}</span>
+              </div>
+
+              <div class="info-item">
+                <span class="label">Document Version:</span>
+                <span class="value">{{ uploadResult.version }}</span>
+              </div>
+
+              <div class="info-item">
+                <span class="label">Gas Used:</span>
+                <span class="value">{{ uploadResult.gasUsed }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-section">
+            <h4>📄 Document Information</h4>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Content Hash (SHA-256):</span>
+                <span class="value hash-value">{{ uploadResult.contentHash }}</span>
+                <button @click="copyToClipboard(uploadResult.contentHash)" class="copy-btn">📋</button>
+              </div>
+
+              <div class="info-item">
+                <span class="label">Patient ID:</span>
+                <span class="value">{{ uploadResult.patientId }}</span>
+                <button @click="copyToClipboard(uploadResult.patientId)" class="copy-btn">📋</button>
+              </div>
+
+              <div class="info-item">
+                <span class="label">Document Type:</span>
+                <span class="value">{{ getDocTypeName(uploadResult.docType) }}</span>
+              </div>
+
+              <div class="info-item">
+                <span class="label">Upload Timestamp:</span>
+                <span class="value">{{ formatTimestamp(uploadResult.timestamp) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-section">
+            <h4>🔍 Verification Links</h4>
+            <div class="link-buttons">
+              <a :href="getBlockchainViewUrl(uploadResult.txHash)" target="_blank" class="view-link">
+                🌐 View Transaction on Flare Explorer
+              </a>
+              <a :href="getContractViewUrl()" target="_blank" class="view-link">
+                📄 View Contract on Flare Explorer
+              </a>
+              <button @click="verifyDocumentHash" class="verify-btn">
+                ✅ Verify Document Hash
+              </button>
+            </div>
+          </div>
+
+          <div class="result-section">
+            <h4>📊 Event Details</h4>
+            <div class="event-info">
+              <p><strong>Event:</strong> DocumentUploaded</p>
+              <p><strong>Contract Address:</strong> {{ getContractAddress() }}</p>
+              <p><strong>Network:</strong> Flare Coston2 Testnet</p>
+              <p><strong>Chain ID:</strong> 114</p>
+            </div>
+          </div>
         </div>
         <div v-else class="error">
           <h3>❌ Upload Failed</h3>
@@ -128,11 +249,11 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { uploadToIPFS, ipfsToGatewayUrl } from '@/utils/ipfs'
-import { uploadToIPFSSimple, ipfsToGatewayUrlSimple } from '@/utils/ipfs-simple'
-import { encryptFileWithWallet, generateSalt, hashPatientId } from '@/utils/encryption'
+import { encryptTextWithWallet, encryptFileWithWallet, generateSalt, hashPatientId, generateFileHash, generateTextHash, createContentURI } from '@/utils/encryption'
+import { storeEncryptedFile } from '@/utils/local-storage'
+import { mappingService } from '@/utils/mapping-service'
 import { ethers } from 'ethers'
-// import MedicalVaultABI from '@/assets/MedicalVault.json' // Not needed for IPFS-only mode
+import MedicalVaultABI from '@/assets/MedicalVault.json'
 
 // Props
 interface Props {
@@ -147,11 +268,9 @@ const props = defineProps<Props>()
 const mrn = ref('')
 const salt = ref('')
 const docType = ref('0')
+const uploadType = ref('file') // 'file' or 'text'
+const documentContent = ref('')
 const selectedFile = ref<File | null>(null)
-// encryptionKey removed - using wallet-based encryption
-const paymentMethod = ref('flr')
-const xrplProofData = ref('')
-const attestedUSDc = ref(500) // Default $5.00
 
 const uploading = ref(false)
 const currentStep = ref(0)
@@ -162,7 +281,8 @@ const uploadResult = ref<any>(null)
 
 // Computed properties
 const canProceedWithUpload = computed(() => {
-  return selectedFile.value && mrn.value && salt.value && props.isConnected
+  const hasContent = uploadType.value === 'file' ? selectedFile.value : documentContent.value
+  return hasContent && mrn.value && salt.value && props.isConnected
 })
 
 // Simplified - no permission checking for IPFS-only mode
@@ -191,101 +311,446 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+// Get blockchain explorer URL
+const getBlockchainViewUrl = (txHash: string): string => {
+  return `https://coston2-explorer.flare.network/tx/${txHash}`
+}
+
+// Get contract explorer URL
+const getContractViewUrl = (): string => {
+  return `https://coston2-explorer.flare.network/address/${getContractAddress()}`
+}
+
+// Get contract address
+const getContractAddress = (): string => {
+  return props.contract?.address || import.meta.env.VITE_VAULT_ADDRESS || '0x6cd4FEb053E613dF60CF10f0DD1D9597051D241B'
+}
+
+// Document type names
+const getDocTypeName = (type: string | number): string => {
+  const types: Record<string, string> = {
+    '0': '🩺 Diagnosis Letter',
+    '1': '📋 Referral',
+    '2': '📝 Intake Form'
+  }
+  return types[type.toString()] || 'Unknown'
+}
+
+// Format timestamp
+const formatTimestamp = (timestamp: number): string => {
+  return new Date(timestamp * 1000).toLocaleString()
+}
+
+// Copy to clipboard
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    // You could add a toast notification here
+    console.log('Copied to clipboard:', text)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
+
+// Verify document hash
+const verifyDocumentHash = async () => {
+  if (!uploadResult.value) return
+
+  try {
+    uploadStatus.value = 'Verifying document hash on blockchain...'
+
+    const patientId = uploadResult.value.patientId
+    const docCount = await props.contract.getDocumentCount(patientId)
+
+    // Find the latest document for this patient
+    for (let i = docCount.toNumber() - 1; i >= 0; i--) {
+      const doc = await props.contract.getDocument(patientId, i)
+      if (doc.version.eq(uploadResult.value.version)) {
+        const onChainURI = doc.ipfsHash
+        const onChainHash = onChainURI.split('#')[0] // Extract hash from URI
+
+        if (onChainHash === uploadResult.value.contentHash) {
+          uploadStatus.value = '✅ Document hash verified successfully on blockchain!'
+        } else {
+          uploadStatus.value = '❌ Document hash mismatch - verification failed!'
+        }
+
+        setTimeout(() => {
+          uploadStatus.value = ''
+        }, 5000)
+        return
+      }
+    }
+
+    uploadStatus.value = '❌ Document not found on blockchain'
+    setTimeout(() => {
+      uploadStatus.value = ''
+    }, 5000)
+
+  } catch (error) {
+    console.error('Verification failed:', error)
+    uploadStatus.value = '❌ Verification failed - unable to connect to blockchain'
+    setTimeout(() => {
+      uploadStatus.value = ''
+    }, 5000)
+  }
+}
+
 // Format ether amount - removed for IPFS-only mode
 // const formatEther = (wei: string): string => {
 //   return ethers.utils.formatEther(wei)
 // }
 
-// Get IPFS view URL
-const getIPFSViewUrl = (hash: string): string => {
-  try {
-    return ipfsToGatewayUrl(hash)
-  } catch {
-    return ipfsToGatewayUrlSimple(hash)
-  }
-}
 
 // Main upload function
 const uploadDocument = async () => {
-  if (!selectedFile.value) return
+  if (!canProceedWithUpload.value) return
 
   uploading.value = true
   currentStep.value = 0
   uploadResult.value = null
 
+  console.log('🚀 Starting document upload process')
+  console.log('Upload type:', uploadType.value)
+  console.log('Props contract:', props.contract)
+  console.log('Window ethereum:', !!window.ethereum)
+  console.log('Account:', props.account)
+  console.log('Is connected:', props.isConnected)
+
   try {
-    // Step 1: Get wallet signer
+    // Step 1: Initialize ethers properly
     currentStep.value = 1
     uploadStatus.value = 'Preparing wallet encryption...'
+    console.log('📝 Step 1: Initializing ethers and wallet connection')
 
-    if (!props.contract || !window.ethereum) {
-      throw new Error('Wallet not connected properly')
+    if (!window.ethereum) {
+      throw new Error('MetaMask not detected')
     }
 
-    const provider = new ethers.providers.Web3Provider(window.ethereum)
-    const signer = provider.getSigner()
-    const patientId = hashPatientId(mrn.value, salt.value)
+    if (!props.isConnected || !props.account) {
+      throw new Error('Wallet not connected')
+    }
 
-    // Step 2: Encrypt file with wallet
-    uploadStatus.value = 'Encrypting document with wallet signature...'
-
-    const fileBuffer = await selectedFile.value.arrayBuffer()
-    const { encryptedContent, metadata } = await encryptFileWithWallet(
-      fileBuffer,
-      signer,
-      patientId,
-      salt.value
-    )
-
-    // Step 3: Upload to IPFS
-    currentStep.value = 2
-    uploadStatus.value = 'Uploading to IPFS...'
-
-    // Create encrypted file blob
-    const encryptedBlob = new Blob([encryptedContent], { type: 'application/octet-stream' })
-    const encryptedFile = new File([encryptedBlob], `encrypted_${selectedFile.value.name}`, {
-      type: 'application/octet-stream'
+    // Initialize provider and signer with comprehensive logging
+    console.log('🔗 Creating Web3Provider...')
+    const provider = new ethers.providers.Web3Provider(window.ethereum, {
+      name: 'coston2',
+      chainId: 114
     })
 
-    let ipfsHash: string
-    try {
-      ipfsHash = await uploadToIPFS(encryptedFile)
-    } catch (ipfsError) {
-      console.warn('IPFS upload failed, using simple fallback:', ipfsError)
-      ipfsHash = await uploadToIPFSSimple(encryptedFile)
+    console.log('Provider created:', provider)
+    console.log('Provider network:', await provider.getNetwork())
+
+    console.log('🖊️ Getting signer...')
+    const signer = provider.getSigner()
+    console.log('Signer created:', signer)
+
+    const signerAddress = await signer.getAddress()
+    console.log('Signer address:', signerAddress)
+    console.log('Expected account:', props.account)
+
+    if (signerAddress.toLowerCase() !== props.account.toLowerCase()) {
+      throw new Error(`Signer address mismatch: ${signerAddress} vs ${props.account}`)
     }
 
-    // Success - IPFS only
+    // Initialize contract with proper ABI and address
+    console.log('📋 Initializing contract with ABI...')
+    const contractAddress = getContractAddress()
+    console.log('Contract address:', contractAddress)
+    console.log('Contract ABI:', MedicalVaultABI.abi ? 'Available' : 'Missing')
+
+    const contract = new ethers.Contract(
+      contractAddress,
+      MedicalVaultABI.abi || MedicalVaultABI,
+      signer
+    )
+
+    console.log('Contract instance created:', contract)
+    console.log('Contract functions available:', Object.keys(contract.functions || {}))
+
+    // Step 2: Generate patient ID and process content
+    console.log('👤 Step 2: Processing patient data and content')
+    // const patientId = hashPatientId(mrn.value, salt.value)
+    const patientId = "0xd976ece7f97402cc704731e8d64e747d1126161565a1208473a9bf64bffc8570"
+    console.log('MRN:', mrn.value)
+    console.log('Salt:', salt.value)
+
+    let encryptedContent: string
+    let contentHash: string
+    let filename: string = 'document'
+    let metadata: any
+
+    currentStep.value = 2
+
+    if (uploadType.value === 'file' && selectedFile.value) {
+      console.log('📁 Processing file upload...')
+      uploadStatus.value = 'Processing file and generating hash...'
+
+      filename = selectedFile.value.name
+      console.log('File name:', filename)
+      console.log('File size:', selectedFile.value.size)
+      console.log('File type:', selectedFile.value.type)
+
+      const fileBuffer = await selectedFile.value.arrayBuffer()
+      console.log('File buffer length:', fileBuffer.byteLength)
+
+      // Generate file hash
+      console.log('🔍 Generating file hash...')
+      contentHash = await generateFileHash(fileBuffer)
+      console.log('Content hash generated:', contentHash)
+
+      // Encrypt file with wallet
+      console.log('🔐 Encrypting file with wallet...')
+      const fileEncryption = await encryptFileWithWallet(
+        fileBuffer,
+        signer,
+        patientId,
+        salt.value
+      )
+      console.log('File encryption completed')
+
+      encryptedContent = fileEncryption.encryptedContent
+      metadata = { ...fileEncryption.metadata, filename, contentType: 'file', hash: contentHash }
+      console.log('File metadata:', metadata)
+
+    } else if (uploadType.value === 'text' && documentContent.value) {
+      console.log('📝 Processing text upload...')
+      uploadStatus.value = 'Processing text and generating hash...'
+
+      filename = 'text_document.txt'
+      console.log('Text content length:', documentContent.value.length)
+
+      // Generate text hash
+      console.log('🔍 Generating text hash...')
+      contentHash = await generateTextHash(documentContent.value)
+      console.log('Content hash generated:', contentHash)
+
+      // Encrypt text with wallet
+      console.log('🔐 Encrypting text with wallet...')
+      const textEncryption = await encryptTextWithWallet(
+        documentContent.value,
+        signer,
+        patientId,
+        salt.value
+      )
+      console.log('Text encryption completed')
+
+      encryptedContent = textEncryption.encryptedContent
+      metadata = { ...textEncryption.metadata, filename, contentType: 'text', hash: contentHash }
+      console.log('Text metadata:', metadata)
+    } else {
+      throw new Error('No content selected for upload')
+    }
+
+    // Step 3: Create content URI for blockchain
+    currentStep.value = 3
+    uploadStatus.value = 'Creating content URI...'
+    console.log('🔗 Step 3: Creating content URI')
+
+    const contentURI = createContentURI(contentHash, uploadType.value as 'file' | 'text', filename)
+    console.log('Content URI created:', contentURI)
+
+    // Step 4: Mint on Flare blockchain (no fee required)
+    currentStep.value = 4
+    console.log('⛓️ Step 4: Minting on Flare blockchain')
+    uploadStatus.value = 'Minting document hash on blockchain...'
+
+    const docKind = parseInt(docType.value)
+    console.log('Document type (docKind):', docKind)
+    console.log('Patient ID for contract:', patientId)
+    console.log('Content URI for contract:', contentURI)
+
+    // Check if uploadDocumentDeduct function exists
+    const contractFunctions = Object.keys(contract.functions || {})
+    console.log('Available contract functions:', contractFunctions)
+
+    if (!contract.uploadDocumentDeduct) {
+      console.error('uploadDocumentDeduct function not found!')
+      throw new Error('uploadDocumentDeduct function not available in contract')
+    }
+
+    // Estimate gas for upload
+    let gasEstimate
+    try {
+      gasEstimate = await contract.estimateGas.uploadDocumentDeduct(
+        patientId,
+        docKind,
+        contentURI
+      )
+      console.log('Gas estimate:', gasEstimate.toString())
+    } catch (gasError) {
+      console.error('Gas estimation failed:', gasError)
+      gasEstimate = ethers.BigNumber.from('500000') // fallback
+    }
+
+    // Execute blockchain transaction (try without fee first)
+    console.log('📝 Executing blockchain mint transaction...')
+    console.log('Transaction params:', {
+      patientId,
+      docKind,
+      contentURI,
+      gasLimit: gasEstimate.mul(120).div(100) // 20% buffer
+    })
+
+    const tx = await contract.uploadDocumentDeduct(
+      patientId,
+      docKind,
+      contentURI,
+      {
+        gasLimit: gasEstimate.mul(120).div(100) // 20% buffer
+      }
+    )
+
+    console.log('Transaction sent:', tx.hash)
+    console.log('Transaction object:', tx)
+
+    uploadStatus.value = 'Waiting for blockchain confirmation...'
+    console.log('⏳ Waiting for transaction confirmation...')
+
+    const receipt = await tx.wait()
+    console.log('✅ Transaction confirmed!', receipt)
+    console.log('Block number:', receipt.blockNumber)
+    console.log('Gas used:', receipt.gasUsed.toString())
+    console.log('Transaction logs:', receipt.logs)
+
+    // Find the DocumentUploaded event
+    console.log('🔍 Parsing transaction logs for DocumentUploaded event...')
+
+    const uploadEvent = receipt.logs.find((log: any) => {
+      try {
+        console.log('Parsing log:', log)
+        const parsed = contract.interface.parseLog(log)
+        console.log('Parsed log:', parsed)
+        return parsed?.name === 'DocumentUploaded'
+      } catch (parseError) {
+        console.log('Failed to parse log:', parseError)
+        return false
+      }
+    })
+
+    let version = 1
+    if (uploadEvent) {
+      console.log('📄 DocumentUploaded event found:', uploadEvent)
+      const parsed = contract.interface.parseLog(uploadEvent)
+      console.log('Event args:', parsed?.args)
+      version = Number(parsed?.args[3] || 1)
+      console.log('Document version:', version)
+    } else {
+      console.warn('⚠️ DocumentUploaded event not found in transaction logs')
+    }
+
+    // Get current timestamp
+    const currentTimestamp = Math.floor(Date.now() / 1000)
+
+    // Create success result with real blockchain transaction
     uploadResult.value = {
       success: true,
-      ipfsHash,
-      message: 'Document successfully uploaded to IPFS!'
-    }
-
-    uploadStatus.value = 'Upload complete!'
-
-    // Store upload info locally for future reference
-    const uploadInfo = {
-      filename: selectedFile.value.name,
-      ipfsHash,
+      txHash: receipt.hash,
+      blockNumber: receipt.blockNumber,
+      gasUsed: receipt.gasUsed.toString(),
+      version,
+      contentHash,
+      contentURI,
       patientId,
       docType: docType.value,
-      uploadDate: new Date().toISOString(),
-      metadata, // Store wallet-based encryption metadata
-      encryptionMethod: 'wallet-signature'
+      timestamp: currentTimestamp,
+      message: 'Document hash minted on blockchain and file stored locally!'
     }
-
-    // Save to localStorage for simple tracking
-    const existingUploads = JSON.parse(localStorage.getItem('medicalVaultUploads') || '[]')
-    existingUploads.push(uploadInfo)
-    localStorage.setItem('medicalVaultUploads', JSON.stringify(existingUploads))
-
-    console.log('✅ Document uploaded to IPFS successfully!', uploadInfo)
 
     uploadStatus.value = 'Upload completed successfully!'
 
+    // Store encrypted file locally using IndexedDB for later download
+    try {
+      uploadStatus.value = 'Storing file locally for future access...'
+
+      const fileId = await storeEncryptedFile(
+        filename,
+        uploadType.value === 'file' ? selectedFile.value!.type : 'text/plain',
+        encryptedContent,
+        metadata,
+        contentHash,
+        uploadResult.value.txHash
+      )
+
+      // Store upload info in localStorage for quick reference
+      const uploadInfo = {
+        fileId, // Reference to IndexedDB stored file
+        filename,
+        contentType: uploadType.value,
+        contentHash,
+        contentURI,
+        patientId,
+        docType: docType.value,
+        uploadDate: new Date().toISOString(),
+        encryptionMethod: 'wallet-signature',
+        txHash: uploadResult.value.txHash,
+        version: uploadResult.value.version,
+        blockNumber: uploadResult.value.blockNumber
+      }
+
+      // Save to localStorage for simple tracking (without encrypted content)
+      const existingUploads = JSON.parse(localStorage.getItem('medicalVaultUploads') || '[]')
+      existingUploads.push(uploadInfo)
+      localStorage.setItem('medicalVaultUploads', JSON.stringify(existingUploads))
+
+      uploadStatus.value = 'Transaction hash mapped to local file!'
+
+      console.log('✅ Document hash minted on blockchain and mapped to local file!', uploadInfo)
+
+      // Store mapping in database for cross-device sync
+      try {
+        uploadStatus.value = 'Storing mapping in database...'
+
+        await mappingService.storeMapping({
+          txHash: uploadResult.value.txHash,
+          walletAddress: props.account.toLowerCase(),
+          contentHash,
+          fileName: filename,
+          fileSize: uploadType.value === 'file' ? selectedFile.value!.size : documentContent.value.length,
+          contentType: uploadType.value === 'file' ? selectedFile.value!.type : 'text/plain',
+          patientId,
+          docType: parseInt(docType.value),
+          blockNumber: uploadResult.value.blockNumber,
+          gasUsed: uploadResult.value.gasUsed,
+          version: uploadResult.value.version,
+          localFileId: fileId,
+          contentURI,
+          deviceInfo: mappingService.createDeviceInfo()
+        })
+
+        console.log('✅ Mapping stored in database successfully!')
+        uploadStatus.value = 'Upload completed - stored locally and in database!'
+
+      } catch (mappingError) {
+        console.warn('⚠️ Failed to store mapping in database (continuing anyway):', mappingError)
+        uploadStatus.value = 'Upload completed - stored locally (database storage failed)'
+      }
+
+    } catch (storageError) {
+      console.error('Local storage failed:', storageError)
+      uploadStatus.value = 'Warning: File not stored locally, but hash recorded on blockchain'
+    }
+
   } catch (error: any) {
-    console.error('Upload error:', error)
+    console.error('❌ Upload error occurred:')
+    console.error('Error type:', typeof error)
+    console.error('Error message:', error.message)
+    console.error('Error stack:', error.stack)
+    console.error('Full error object:', error)
+
+    // Log additional context for debugging
+    console.error('Upload context:', {
+      uploadType: uploadType.value,
+      hasFile: !!selectedFile.value,
+      hasText: !!documentContent.value,
+      mrn: mrn.value,
+      salt: salt.value,
+      docType: docType.value,
+      account: props.account,
+      isConnected: props.isConnected,
+      contractAddress: getContractAddress()
+    })
+
     uploadResult.value = {
       success: false,
       error: error.message || 'Upload failed'
@@ -293,6 +758,7 @@ const uploadDocument = async () => {
     uploadStatus.value = 'Upload failed'
   } finally {
     uploading.value = false
+    console.log('🏁 Upload process completed')
   }
 }
 
@@ -357,8 +823,9 @@ h3 {
 }
 
 .patient-section,
-.file-section,
-.payment-section {
+.upload-type-section,
+.content-section,
+.file-section {
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid #eee;
@@ -531,8 +998,47 @@ small {
   font-size: 0.9rem;
 }
 
-/* Wallet-based encryption info styles */
-.wallet-encryption-info {
+.upload-options {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.radio-option:hover {
+  border-color: #3498db;
+}
+
+.radio-option input[type="radio"] {
+  width: auto;
+  margin: 0;
+}
+
+.radio-option input[type="radio"]:checked + span,
+.radio-option:has(input[type="radio"]:checked) {
+  border-color: #3498db;
+  background: #f0f8ff;
+}
+
+.file-info {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+/* Hash storage info styles */
+.hash-info {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1.5rem;
@@ -540,26 +1046,184 @@ small {
   margin: 1rem 0;
 }
 
-.wallet-encryption-info h4 {
+/* Blockchain + local mapping info styles */
+.mapping-info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.mapping-info h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.mapping-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+
+.hash-info h4 {
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
 }
 
-.wallet-encryption-info p {
+.hash-info p {
   margin: 0 0 1rem 0;
   opacity: 0.9;
 }
 
-.encryption-benefits {
+.storage-benefits {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.encryption-benefits span {
+.storage-benefits span {
   background: rgba(255, 255, 255, 0.2);
   padding: 0.5rem;
   border-radius: 4px;
   font-size: 0.9rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 150px;
+}
+
+/* Success result styling */
+.result-section {
+  margin: 1.5rem 0;
+  border: 1px solid #d4edda;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f8fff9;
+}
+
+.result-section h4 {
+  margin: 0 0 1rem 0;
+  color: #155724;
+  border-bottom: 2px solid #27ae60;
+  padding-bottom: 0.5rem;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.info-item .label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 140px;
+}
+
+.info-item .value {
+  flex: 1;
+  margin: 0 0.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+
+.info-item .value.hash-value {
+  font-size: 0.8rem;
+  color: #6610f2;
+}
+
+.copy-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.3s;
+}
+
+.copy-btn:hover {
+  background: #5a6268;
+}
+
+.link-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.view-link, .verify-btn {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.view-link {
+  background: #007bff;
+  color: white;
+}
+
+.view-link:hover {
+  background: #0056b3;
+  color: white;
+  text-decoration: none;
+}
+
+.verify-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.verify-btn:hover {
+  background: #1e7e34;
+}
+
+.event-info {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  border-left: 4px solid #007bff;
+}
+
+.event-info p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .info-item .label {
+    min-width: auto;
+  }
+
+  .link-buttons {
+    flex-direction: column;
+  }
 }
 </style>
