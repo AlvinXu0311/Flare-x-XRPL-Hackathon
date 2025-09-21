@@ -1,0 +1,4 @@
+ipfs://QmR7mWggz97p3yhkPPmubZVnqZEL36FS4k3QjZ6nWtRL18
+https://ipfs.io/ipfs/QmR7mWggz97p3yhkPPmubZVnqZEL36FS4k3QjZ6nWtRL18
+https://gateway.pinata.cloud/ipfs/QmR7mWggz97p3yhkPPmubZVnqZEL36FS4k3QjZ6nWtRL18
+https://cloudflare-ipfs.com/ipfs/QmR7mWggz97p3yhkPPmubZVnqZEL36FS4k3QjZ6nWtRL18

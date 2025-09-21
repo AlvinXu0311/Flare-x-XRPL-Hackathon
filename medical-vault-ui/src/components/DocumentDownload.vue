@@ -2,183 +2,91 @@
   <div class="document-download">
     <h2>Download Medical Document</h2>
 
-    <!-- Access Check -->
-    <div v-if="!hasReadAccess && documentData" class="error">
-      <p>❌ You don't have permission to download this document.</p>
-      <p>Current account: {{ account }}</p>
+    <!-- Your Uploaded Documents -->
+    <div class="uploaded-documents">
+      <h3>📄 Your Uploaded Documents</h3>
+      <p>Documents you've uploaded with your wallet:</p>
+
+      <div v-if="userDocuments.length === 0" class="no-documents">
+        <p>No documents found. Upload some documents first!</p>
+      </div>
+
+      <div v-else class="documents-list">
+        <div
+          v-for="doc in userDocuments"
+          :key="doc.ipfsHash"
+          class="document-card"
+        >
+          <div class="doc-info">
+            <h4>{{ doc.filename }}</h4>
+            <p><strong>Type:</strong> {{ getDocTypeName(doc.docType) }}</p>
+            <p><strong>Uploaded:</strong> {{ formatDate(doc.uploadDate) }}</p>
+            <p><strong>IPFS Hash:</strong> {{ doc.ipfsHash }}</p>
+          </div>
+
+          <div class="doc-actions">
+            <button
+              @click="downloadDocument(doc)"
+              :disabled="isDownloading[doc.ipfsHash]"
+              class="download-btn"
+            >
+              {{ isDownloading[doc.ipfsHash] ? 'Downloading...' : '📥 Download & Decrypt' }}
+            </button>
+            <button @click="viewOnIPFS(doc.ipfsHash)" class="view-btn">
+              🌐 View on IPFS
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Search Form -->
-    <div class="search-section">
-      <form @submit.prevent="searchDocument" class="search-form">
-        <h3>Find Document</h3>
+    <!-- Manual IPFS Hash Download -->
+    <div class="manual-download">
+      <h3>🔍 Download by IPFS Hash</h3>
+      <p>Enter an IPFS hash if you have a document link:</p>
 
-        <div class="input-group">
-          <label for="mrn">Medical Record Number (MRN):</label>
-          <input
-            id="mrn"
-            v-model="mrn"
-            type="text"
-            placeholder="Enter MRN"
-            required
-          />
-        </div>
+      <div class="input-group">
+        <label for="ipfsHash">IPFS Hash:</label>
+        <input
+          id="ipfsHash"
+          v-model="manualIpfsHash"
+          type="text"
+          placeholder="Enter IPFS hash (without ipfs:// prefix)"
+        />
+      </div>
 
-        <div class="input-group">
-          <label for="salt">Salt:</label>
-          <input
-            id="salt"
-            v-model="salt"
-            type="text"
-            placeholder="Enter salt value"
-            required
-          />
-        </div>
+      <div class="wallet-decrypt-info">
+        <h4>🔐 Wallet-Based Decryption</h4>
+        <p>This will use your wallet signature to decrypt the document. Only the wallet that uploaded it can decrypt.</p>
+      </div>
 
-        <div class="input-group">
-          <label for="docType">Document Type:</label>
-          <select id="docType" v-model="docType" required>
-            <option value="0">Diagnosis Letter</option>
-            <option value="1">Referral</option>
-            <option value="2">Intake Form</option>
-          </select>
-        </div>
-
-        <button type="submit" :disabled="searching" class="search-btn">
-          {{ searching ? 'Searching...' : 'Find Document' }}
-        </button>
-      </form>
+      <button
+        @click="downloadManualHash"
+        :disabled="!manualIpfsHash || isManualDownloading"
+        class="download-btn"
+      >
+        {{ isManualDownloading ? 'Downloading...' : '📥 Download & Decrypt' }}
+      </button>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="searching" class="loading">
-      <p>Searching for document...</p>
+    <!-- Download Status -->
+    <div v-if="downloadStatus" class="download-status">
+      <p>{{ downloadStatus }}</p>
     </div>
 
     <!-- Error Display -->
     <div v-if="error" class="error">
       <p>{{ error }}</p>
     </div>
-
-    <!-- Document Found -->
-    <div v-if="documentData && !searching" class="document-found">
-      <h3>Document Found</h3>
-      <div class="document-info">
-        <div class="metadata">
-          <p><strong>Type:</strong> {{ getDocTypeName(docType) }}</p>
-          <p><strong>Version:</strong> {{ documentData.version }}</p>
-          <p><strong>Last Updated:</strong> {{ formatTimestamp(documentData.updatedAt) }}</p>
-          <p><strong>IPFS Hash:</strong> {{ documentData.hashURI.replace('ipfs://', '') }}</p>
-          <p><strong>File Size:</strong> {{ fileSize ? formatFileSize(fileSize) : 'Unknown' }}</p>
-        </div>
-
-        <div class="payment-info">
-          <h4>Payment Information</h4>
-          <p><strong>Payment Method:</strong> {{ getPaymentMethod() }}</p>
-          <p><strong>USD Paid:</strong> ${{ (documentData.paidUSDc / 100).toFixed(2) }}</p>
-          <p v-if="documentData.paidDrops > 0"><strong>XRP Drops:</strong> {{ documentData.paidDrops }}</p>
-        </div>
-
-        <!-- Access Control -->
-        <div v-if="hasReadAccess" class="download-section">
-          <h4>Download Options</h4>
-
-          <div class="input-group">
-            <label for="decryptionKey">Decryption Password:</label>
-            <input
-              id="decryptionKey"
-              v-model="decryptionKey"
-              type="password"
-              placeholder="Enter the password used to encrypt this document"
-              required
-            />
-          </div>
-
-          <div class="download-actions">
-            <button @click="viewOnIPFS" class="view-btn">
-              View on IPFS Gateway
-            </button>
-            <button
-              @click="downloadAndDecrypt"
-              :disabled="downloading || !decryptionKey"
-              class="download-btn"
-            >
-              {{ downloading ? 'Downloading...' : 'Download & Decrypt' }}
-            </button>
-          </div>
-
-          <!-- Download Progress -->
-          <div v-if="downloading" class="download-progress">
-            <div class="progress-steps">
-              <div class="step" :class="{ active: downloadStep >= 1, completed: downloadStep > 1 }">
-                1. Downloading from IPFS
-              </div>
-              <div class="step" :class="{ active: downloadStep >= 2, completed: downloadStep > 2 }">
-                2. Decrypting file
-              </div>
-              <div class="step" :class="{ active: downloadStep >= 3 }">
-                3. Preparing download
-              </div>
-            </div>
-            <div v-if="downloadStatus" class="status-message">{{ downloadStatus }}</div>
-          </div>
-
-          <!-- Download Result -->
-          <div v-if="downloadResult" class="download-result">
-            <div v-if="downloadResult.success" class="success">
-              <h4>✅ Download Successful!</h4>
-              <p>File has been decrypted and downloaded to your device.</p>
-              <p><strong>Original filename:</strong> {{ downloadResult.filename }}</p>
-            </div>
-            <div v-else class="error">
-              <h4>❌ Download Failed</h4>
-              <p>{{ downloadResult.error }}</p>
-              <div v-if="downloadResult.error.includes('decrypt')" class="decrypt-help">
-                <p><strong>Common issues:</strong></p>
-                <ul>
-                  <li>Incorrect decryption password</li>
-                  <li>File was corrupted during upload</li>
-                  <li>Wrong salt value used</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-else class="access-denied">
-          <h4>🔒 Access Restricted</h4>
-          <p>You need permission from the guardian to download this document.</p>
-          <div class="roles-info">
-            <p><strong>Guardian:</strong> {{ roles.guardian || 'Not set' }}</p>
-            <p><strong>Psychologist:</strong> {{ roles.psychologist || 'Not set' }}</p>
-            <p><strong>Insurer:</strong> {{ roles.insurer || 'Not set' }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- No Document Found -->
-    <div v-if="searched && !documentData && !searching && !error" class="no-document">
-      <h3>📄 No Document Found</h3>
-      <p>No document exists for the provided MRN, salt, and document type combination.</p>
-      <p><strong>Possible reasons:</strong></p>
-      <ul>
-        <li>Document hasn't been uploaded yet</li>
-        <li>Incorrect MRN or salt values</li>
-        <li>Wrong document type selected</li>
-        <li>Document exists but payment is incomplete</li>
-      </ul>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { ethers } from 'ethers'
-import { downloadFromIPFS, getIPFSFileInfo, ipfsToGatewayUrl } from '@/utils/ipfs'
-import { downloadFromIPFSSimple, getIPFSFileInfoSimple, ipfsToGatewayUrlSimple } from '@/utils/ipfs-simple'
-import { decryptFile, hashPatientId } from '@/utils/encryption'
-import MedicalVaultABI from '@/assets/MedicalVault.json'
+import { decryptFileWithWallet } from '@/utils/encryption'
+import { ipfsToGatewayUrl } from '@/utils/ipfs'
+import { ipfsToGatewayUrlSimple } from '@/utils/ipfs-simple'
 
 // Props
 interface Props {
@@ -190,211 +98,193 @@ interface Props {
 const props = defineProps<Props>()
 
 // Reactive state
-const mrn = ref('')
-const salt = ref('')
-const docType = ref('0')
-const decryptionKey = ref('')
-
-const searching = ref(false)
-const downloading = ref(false)
-const downloadStep = ref(0)
+const userDocuments = ref<any[]>([])
+const manualIpfsHash = ref('')
+const isDownloading = ref<Record<string, boolean>>({})
+const isManualDownloading = ref(false)
 const downloadStatus = ref('')
-const searched = ref(false)
 const error = ref('')
 
-const documentData = ref<any>(null)
-const fileSize = ref<number | null>(null)
-const hasReadAccess = ref(false)
-const roles = ref<any>({})
-const downloadResult = ref<any>(null)
+// Document type names
+const getDocTypeName = (type: string | number): string => {
+  const types: Record<string, string> = {
+    '0': '🩺 Diagnosis',
+    '1': '📋 Referral',
+    '2': '📝 Intake'
+  }
+  return types[type.toString()] || 'Unknown'
+}
 
-// Search for document
-const searchDocument = async () => {
-  if (!props.contract || !mrn.value || !salt.value) return
+// Format date
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString()
+}
 
-  searching.value = true
-  error.value = ''
-  documentData.value = null
-  downloadResult.value = null
-  searched.value = false
-
+// Load user's uploaded documents from localStorage
+const loadUserDocuments = () => {
   try {
-    const patientId = hashPatientId(mrn.value, salt.value)
-    const docKind = parseInt(docType.value)
+    const uploads = JSON.parse(localStorage.getItem('medicalVaultUploads') || '[]')
 
-    // Get document metadata
-    const result = await props.contract.getDocMeta(patientId, docKind)
-
-    if (!result[0]) { // No hashURI means no document
-      searched.value = true
-      return
-    }
-
-    documentData.value = {
-      hashURI: result[0],
-      version: Number(result[1]),
-      updatedAt: Number(result[2]),
-      paymentProof: result[3],
-      paidUSDc: Number(result[4]),
-      paidDrops: Number(result[5]),
-      currencyHash: result[6]
-    }
-
-    // Check read access
-    hasReadAccess.value = await props.contract.hasRead(patientId, props.account)
-
-    // Get roles information
-    const rolesResult = await props.contract.getRoles(patientId)
-    roles.value = {
-      guardian: rolesResult[0],
-      psychologist: rolesResult[1],
-      insurer: rolesResult[2]
-    }
-
-    // Get file size from IPFS
-    try {
-      const ipfsHash = documentData.value.hashURI.replace('ipfs://', '')
-      try {
-        const fileInfo = await getIPFSFileInfo(ipfsHash)
-        fileSize.value = fileInfo.size
-      } catch {
-        const fileInfo = await getIPFSFileInfoSimple(ipfsHash)
-        fileSize.value = fileInfo.size
-      }
-    } catch (ipfsError) {
-      console.warn('Could not get file size from IPFS:', ipfsError)
-    }
-
-    searched.value = true
-
-  } catch (err: any) {
-    error.value = `Failed to search document: ${err.message}`
-  } finally {
-    searching.value = false
+    // Filter documents uploaded by current wallet
+    userDocuments.value = uploads.filter((doc: any) =>
+      doc.metadata?.walletAddress?.toLowerCase() === props.account.toLowerCase()
+    )
+  } catch (error) {
+    console.error('Error loading user documents:', error)
+    userDocuments.value = []
   }
 }
 
 // Download and decrypt document
-const downloadAndDecrypt = async () => {
-  if (!documentData.value || !decryptionKey.value) return
+const downloadDocument = async (doc: any) => {
+  if (!props.isConnected || !window.ethereum) {
+    error.value = 'Wallet not connected'
+    return
+  }
 
-  downloading.value = true
-  downloadStep.value = 0
-  downloadResult.value = null
+  isDownloading.value[doc.ipfsHash] = true
+  error.value = ''
+  downloadStatus.value = 'Downloading from IPFS...'
 
   try {
-    // Step 1: Download from IPFS
-    downloadStep.value = 1
-    downloadStatus.value = 'Downloading encrypted file from IPFS...'
+    // Get wallet signer
+    const provider = new ethers.providers.Web3Provider(window.ethereum)
+    const signer = provider.getSigner()
 
-    const ipfsHash = documentData.value.hashURI.replace('ipfs://', '')
-    let encryptedData: Uint8Array
-    try {
-      encryptedData = await downloadFromIPFS(ipfsHash)
-    } catch (ipfsError) {
-      console.warn('IPFS download failed, using simple fallback:', ipfsError)
-      encryptedData = await downloadFromIPFSSimple(ipfsHash)
+    // Download from IPFS
+    const response = await fetch(getIPFSUrl(doc.ipfsHash))
+    if (!response.ok) {
+      throw new Error('Failed to download from IPFS')
     }
 
-    // Step 2: Decrypt file
-    downloadStep.value = 2
-    downloadStatus.value = 'Decrypting file...'
+    const encryptedContent = await response.text()
+    downloadStatus.value = 'Decrypting with wallet signature...'
 
-    // Convert Uint8Array to string for decryption
-    const encryptedString = new TextDecoder().decode(encryptedData)
-    const decryptedData = decryptFile(encryptedString, decryptionKey.value, salt.value)
+    // Decrypt using wallet
+    const decryptedBuffer = await decryptFileWithWallet(
+      encryptedContent,
+      signer,
+      doc.metadata
+    )
 
-    // Step 3: Prepare download
-    downloadStep.value = 3
-    downloadStatus.value = 'Preparing download...'
-
-    // Create blob and download
-    const blob = new Blob([decryptedData])
-    const url = URL.createObjectURL(blob)
-
-    // Extract original filename from the type or use a default
-    const docTypeName = getDocTypeName(docType.value).toLowerCase().replace(' ', '_')
-    const filename = `${docTypeName}_${mrn.value}_v${documentData.value.version}.pdf`
+    downloadStatus.value = 'Download complete!'
 
     // Create download link
+    const blob = new Blob([decryptedBuffer])
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = filename
+    a.download = doc.filename || 'medical-document.pdf'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
 
-    downloadResult.value = {
-      success: true,
-      filename
-    }
-
-    downloadStatus.value = 'Download completed!'
+    setTimeout(() => {
+      downloadStatus.value = ''
+    }, 3000)
 
   } catch (err: any) {
-    console.error('Download error:', err)
-    downloadResult.value = {
-      success: false,
-      error: err.message || 'Download failed'
-    }
-    downloadStatus.value = 'Download failed'
+    console.error('Download failed:', err)
+    error.value = `Download failed: ${err.message}`
   } finally {
-    downloading.value = false
+    isDownloading.value[doc.ipfsHash] = false
+  }
+}
+
+// Download by manual IPFS hash
+const downloadManualHash = async () => {
+  if (!props.isConnected || !window.ethereum) {
+    error.value = 'Wallet not connected'
+    return
+  }
+
+  isManualDownloading.value = true
+  error.value = ''
+  downloadStatus.value = 'Downloading from IPFS...'
+
+  try {
+    // Get wallet signer
+    const provider = new ethers.providers.Web3Provider(window.ethereum)
+    const signer = provider.getSigner()
+
+    // Download from IPFS
+    const response = await fetch(getIPFSUrl(manualIpfsHash.value))
+    if (!response.ok) {
+      throw new Error('Failed to download from IPFS')
+    }
+
+    const encryptedContent = await response.text()
+    downloadStatus.value = 'Attempting wallet decryption...'
+
+    // Try to decrypt - this might fail if user doesn't own the document
+    // For manual downloads, we need to guess the metadata structure
+    const metadata = {
+      walletAddress: props.account,
+      patientId: 'unknown', // We don't know this
+      salt: 'unknown' // We don't know this either
+    }
+
+    try {
+      const decryptedBuffer = await decryptFileWithWallet(
+        encryptedContent,
+        signer,
+        metadata
+      )
+
+      downloadStatus.value = 'Download complete!'
+
+      // Create download link
+      const blob = new Blob([decryptedBuffer])
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'medical-document.pdf'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+    } catch (decryptError) {
+      throw new Error('Decryption failed - you may not be authorized to access this document')
+    }
+
+    setTimeout(() => {
+      downloadStatus.value = ''
+    }, 3000)
+
+  } catch (err: any) {
+    console.error('Manual download failed:', err)
+    error.value = `Download failed: ${err.message}`
+  } finally {
+    isManualDownloading.value = false
   }
 }
 
 // View document on IPFS gateway
-const viewOnIPFS = () => {
-  if (documentData.value) {
-    const ipfsHash = documentData.value.hashURI.replace('ipfs://', '')
-    try {
-      const url = ipfsToGatewayUrl(ipfsHash)
-      window.open(url, '_blank')
-    } catch {
-      const url = ipfsToGatewayUrlSimple(ipfsHash)
-      window.open(url, '_blank')
-    }
+const viewOnIPFS = (hash: string) => {
+  const url = getIPFSUrl(hash)
+  window.open(url, '_blank')
+}
+
+// Get IPFS URL
+const getIPFSUrl = (hash: string): string => {
+  try {
+    return ipfsToGatewayUrl(hash)
+  } catch {
+    return ipfsToGatewayUrlSimple(hash)
   }
 }
 
-// Get document type name
-const getDocTypeName = (type: string): string => {
-  switch (type) {
-    case '0': return 'Diagnosis Letter'
-    case '1': return 'Referral'
-    case '2': return 'Intake Form'
-    default: return 'Unknown'
-  }
-}
+// Load documents when component mounts
+onMounted(() => {
+  loadUserDocuments()
+})
 
-// Get payment method description
-const getPaymentMethod = (): string => {
-  if (!documentData.value) return 'Unknown'
-
-  if (documentData.value.paymentProof === '0x0000000000000000000000000000000000000000000000000000000000000000') {
-    return 'FLR Deduct'
-  } else if (documentData.value.paidDrops > 0) {
-    return 'XRPL (XRP)'
-  } else if (documentData.value.paidUSDc > 0) {
-    return 'XRPL (Any Currency)'
-  }
-  return 'Unknown'
-}
-
-// Format timestamp
-const formatTimestamp = (timestamp: number): string => {
-  return new Date(timestamp * 1000).toLocaleString()
-}
-
-// Format file size
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
+// Watch for account changes
+watch(() => props.account, () => {
+  loadUserDocuments()
+})
 </script>
 
 <style scoped>
@@ -404,164 +294,138 @@ const formatFileSize = (bytes: number): string => {
   padding: 2rem;
 }
 
-h2 {
-  color: #2c3e50;
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-h3, h4 {
-  color: #34495e;
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.search-section {
+.uploaded-documents, .manual-download {
   background: white;
   border-radius: 8px;
   padding: 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.input-group {
-  margin-bottom: 1rem;
+.no-documents {
+  text-align: center;
+  color: #7f8c8d;
+  padding: 2rem;
 }
 
-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
+.documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.document-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: box-shadow 0.3s;
+}
+
+.document-card:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.doc-info h4 {
+  margin: 0 0 0.5rem 0;
   color: #2c3e50;
 }
 
-input, select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  box-sizing: border-box;
+.doc-info p {
+  margin: 0.25rem 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
 }
 
-.search-btn,
-.download-btn,
-.view-btn {
-  background: #3498db;
-  color: white;
-  border: none;
+.doc-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-direction: column;
+}
+
+.download-btn, .view-btn {
   padding: 0.75rem 1.5rem;
+  border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 1rem;
-  margin-right: 1rem;
-  margin-bottom: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  text-decoration: none;
+  text-align: center;
+  min-width: 180px;
 }
 
-.search-btn:hover,
-.download-btn:hover,
-.view-btn:hover {
-  background: #2980b9;
+.download-btn {
+  background: #27ae60;
+  color: white;
+}
+
+.download-btn:hover:not(:disabled) {
+  background: #219a52;
+  transform: translateY(-2px);
 }
 
 .download-btn:disabled {
   background: #bdc3c7;
   cursor: not-allowed;
+  transform: none;
 }
 
 .view-btn {
-  background: #95a5a6;
-}
-
-.view-btn:hover {
-  background: #7f8c8d;
-}
-
-.document-found {
-  background: white;
-  border-radius: 8px;
-  padding: 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.document-info {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.metadata,
-.payment-info {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 4px;
-}
-
-.metadata p,
-.payment-info p {
-  margin: 0.5rem 0;
-  padding: 0.25rem 0;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.metadata p:last-child,
-.payment-info p:last-child {
-  border-bottom: none;
-}
-
-.download-actions {
-  margin: 1rem 0;
-}
-
-.download-progress {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.progress-steps {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.step {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  background: #ecf0f1;
-  color: #7f8c8d;
-  flex: 1;
-  text-align: center;
-  margin: 0 0.25rem;
-}
-
-.step.active {
   background: #3498db;
   color: white;
 }
 
-.step.completed {
-  background: #27ae60;
+.view-btn:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.wallet-decrypt-info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-}
-
-.status-message {
-  text-align: center;
-  font-style: italic;
-  color: #3498db;
-}
-
-.download-result {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
+  margin: 1rem 0;
 }
 
-.success {
-  background: #d5f4e6;
-  border: 1px solid #27ae60;
-  color: #155724;
+.wallet-decrypt-info h4 {
+  margin: 0 0 0.5rem 0;
+}
+
+.wallet-decrypt-info p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.download-status {
+  background: #e8f5e8;
+  color: #27ae60;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  text-align: center;
 }
 
 .error {
@@ -569,53 +433,28 @@ input, select {
   color: #c62828;
   padding: 1rem;
   border-radius: 4px;
-  border-left: 4px solid #f44336;
-}
-
-.loading {
-  text-align: center;
-  color: #3498db;
-  font-style: italic;
-  padding: 2rem;
-}
-
-.no-document {
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
-  padding: 2rem;
-  border-radius: 8px;
-  color: #856404;
-}
-
-.no-document ul {
   margin-top: 1rem;
-  padding-left: 1.5rem;
 }
 
-.access-denied {
-  background: #ffebee;
-  border: 1px solid #f44336;
-  padding: 1.5rem;
-  border-radius: 8px;
-  color: #c62828;
+h2, h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
 }
 
-.roles-info {
-  margin-top: 1rem;
-  background: rgba(255,255,255,0.7);
-  padding: 1rem;
-  border-radius: 4px;
-}
+@media (max-width: 768px) {
+  .document-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
 
-.decrypt-help {
-  margin-top: 1rem;
-  background: rgba(255,255,255,0.8);
-  padding: 1rem;
-  border-radius: 4px;
-}
+  .doc-actions {
+    flex-direction: row;
+    justify-content: center;
+  }
 
-.decrypt-help ul {
-  margin-top: 0.5rem;
-  padding-left: 1.5rem;
+  .download-btn, .view-btn {
+    min-width: 140px;
+  }
 }
 </style>

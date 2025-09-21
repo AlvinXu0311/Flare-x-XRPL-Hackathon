@@ -2,14 +2,8 @@
   <div class="document-upload">
     <h2>Upload Medical Document</h2>
 
-    <!-- Role Check -->
-    <div v-if="!canUpload" class="error">
-      <p>❌ You don't have permission to upload documents. Only the pediatric psychologist or contract owner can upload.</p>
-      <p>Current account: {{ account }}</p>
-    </div>
-
     <!-- Upload Form -->
-    <div v-else class="upload-section">
+    <div class="upload-section">
       <form @submit.prevent="uploadDocument" class="upload-form">
         <!-- Patient Information -->
         <div class="patient-section">
@@ -51,19 +45,11 @@
 
         <!-- Permission Status -->
         <div v-if="mrn && salt" class="permission-status">
-          <div v-if="canUpload" class="permission-granted">
-            ✅ <strong>Upload Permission Granted</strong>
-            <p>You can upload documents for this patient.</p>
-          </div>
-          <div v-else class="permission-denied">
-            ❌ <strong>Upload Permission Required</strong>
-            <p>You need to be set as the pediatric psychologist for this patient.</p>
-            <p>Go to <strong>Admin Setup</strong> tab to configure patient roles first.</p>
-          </div>
+          <!-- Permission checking removed for IPFS-only mode -->
         </div>
 
         <!-- File Upload -->
-        <div v-if="canUpload" class="file-section">
+        <div class="file-section">
           <h3>Document File</h3>
           <div class="input-group">
             <label for="file">Select File:</label>
@@ -81,77 +67,18 @@
             </div>
           </div>
 
-          <div class="input-group">
-            <label for="encryptionKey">Encryption Password:</label>
-            <input
-              id="encryptionKey"
-              v-model="encryptionKey"
-              type="password"
-              placeholder="Enter password to encrypt the document"
-              required
-            />
-            <small>This password will be used to encrypt the document for security.</small>
-          </div>
-        </div>
-
-        <!-- Payment Method -->
-        <div v-if="canUpload" class="payment-section">
-          <h3>Payment Method</h3>
-          <div class="payment-options">
-            <label class="radio-option">
-              <input
-                type="radio"
-                value="flr"
-                v-model="paymentMethod"
-                @change="checkInsurerBalance"
-              />
-              <span>FLR Deduct (from insurer balance)</span>
-            </label>
-            <label class="radio-option">
-              <input
-                type="radio"
-                value="xrpl"
-                v-model="paymentMethod"
-              />
-              <span>XRPL Payment (with proof)</span>
-            </label>
-          </div>
-
-          <!-- FLR Balance Info -->
-          <div v-if="paymentMethod === 'flr' && insurerBalance !== null" class="balance-info">
-            <p><strong>Insurer Balance:</strong> {{ formatEther(insurerBalance) }} FLR</p>
-            <p><strong>Upload Fee:</strong> {{ formatEther(uploadFeeWei) }} FLR</p>
-            <p v-if="Number(insurerBalance) < Number(uploadFeeWei)" class="error">
-              ⚠️ Insufficient balance! Please deposit more FLR first.
-            </p>
-          </div>
-
-          <!-- XRPL Payment Fields -->
-          <div v-if="paymentMethod === 'xrpl'" class="xrpl-fields">
-            <div class="input-group">
-              <label for="xrplProof">XRPL Payment Proof:</label>
-              <textarea
-                id="xrplProof"
-                v-model="xrplProofData"
-                placeholder="Enter XRPL payment proof data"
-                rows="3"
-                required
-              ></textarea>
-            </div>
-            <div class="input-group">
-              <label for="attestedUSD">Attested USD Amount (cents):</label>
-              <input
-                id="attestedUSD"
-                v-model="attestedUSDc"
-                type="number"
-                placeholder="500"
-                min="1"
-                required
-              />
-              <small>Amount in USD cents (e.g., 500 = $5.00)</small>
+          <div class="wallet-encryption-info">
+            <h4>🔐 Wallet-Based Encryption</h4>
+            <p>Your document will be encrypted using your wallet signature. Only you will be able to decrypt it later.</p>
+            <div class="encryption-benefits">
+              <span>✅ No passwords to remember</span>
+              <span>✅ Secure wallet-based verification</span>
+              <span>✅ Only your wallet can decrypt</span>
             </div>
           </div>
         </div>
+
+        <!-- Payment Method section removed for IPFS-only mode -->
 
         <!-- Upload Button -->
         <button
@@ -172,9 +99,9 @@
           <div class="step" :class="{ active: currentStep >= 2, completed: currentStep > 2 }">
             2. Uploading to IPFS
           </div>
-          <div class="step" :class="{ active: currentStep >= 3, completed: currentStep > 3 }">
+          <!-- <div class="step" :class="{ active: currentStep >= 3, completed: currentStep > 3 }">
             3. Recording on blockchain
-          </div>
+          </div> -->
         </div>
         <div v-if="uploadStatus" class="status-message">{{ uploadStatus }}</div>
       </div>
@@ -184,8 +111,8 @@
         <div v-if="uploadResult.success" class="success">
           <h3>✅ Document Uploaded Successfully!</h3>
           <p><strong>IPFS Hash:</strong> {{ uploadResult.ipfsHash }}</p>
-          <p><strong>Transaction Hash:</strong> {{ uploadResult.txHash }}</p>
-          <p><strong>Version:</strong> {{ uploadResult.version }}</p>
+          <!-- <p><strong>Transaction Hash:</strong> {{ uploadResult.txHash }}</p>
+          <p><strong>Version:</strong> {{ uploadResult.version }}</p> -->
           <a :href="getIPFSViewUrl(uploadResult.ipfsHash)" target="_blank" class="view-link">
             View on IPFS Gateway
           </a>
@@ -200,12 +127,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { ethers } from 'ethers'
+import { ref, computed } from 'vue'
 import { uploadToIPFS, ipfsToGatewayUrl } from '@/utils/ipfs'
 import { uploadToIPFSSimple, ipfsToGatewayUrlSimple } from '@/utils/ipfs-simple'
-import { encryptFile, generateSalt, hashPatientId } from '@/utils/encryption'
-import MedicalVaultABI from '@/assets/MedicalVault.json'
+import { encryptFileWithWallet, generateSalt, hashPatientId } from '@/utils/encryption'
+import { ethers } from 'ethers'
+// import MedicalVaultABI from '@/assets/MedicalVault.json' // Not needed for IPFS-only mode
 
 // Props
 interface Props {
@@ -221,7 +148,7 @@ const mrn = ref('')
 const salt = ref('')
 const docType = ref('0')
 const selectedFile = ref<File | null>(null)
-const encryptionKey = ref('')
+// encryptionKey removed - using wallet-based encryption
 const paymentMethod = ref('flr')
 const xrplProofData = ref('')
 const attestedUSDc = ref(500) // Default $5.00
@@ -231,104 +158,16 @@ const currentStep = ref(0)
 const uploadStatus = ref('')
 const uploadResult = ref<any>(null)
 
-const canUpload = ref(false)
-const insurerBalance = ref<string | null>(null)
-const uploadFeeWei = ref<string>('0')
+// Removed blockchain-related state
 
 // Computed properties
 const canProceedWithUpload = computed(() => {
-  if (!selectedFile.value || !encryptionKey.value || !mrn.value || !salt.value) {
-    return false
-  }
-
-  if (paymentMethod.value === 'flr') {
-    return insurerBalance.value !== null &&
-           Number(insurerBalance.value) >= Number(uploadFeeWei.value)
-  }
-
-  if (paymentMethod.value === 'xrpl') {
-    return xrplProofData.value.trim() !== '' && attestedUSDc.value >= 500
-  }
-
-  return false
+  return selectedFile.value && mrn.value && salt.value && props.isConnected
 })
 
-// Check if current user can upload
-const checkUploadPermission = async () => {
-  if (!props.contract || !props.account) return
+// Simplified - no permission checking for IPFS-only mode
+// Upload is available to anyone with wallet connection
 
-  try {
-    console.log('Checking upload permission for account:', props.account)
-
-    // Method 1: Try to get contract owner (with fallback for provider errors)
-    let owner
-    try {
-      owner = await props.contract.owner()
-      console.log('Contract owner:', owner)
-    } catch (providerError) {
-      console.warn('Provider error getting owner, using fallback:', providerError)
-      // Fallback: assume user needs specific patient permission
-      canUpload.value = false
-      return
-    }
-
-    // Check if user is contract owner
-    if (owner && owner.toLowerCase() === props.account.toLowerCase()) {
-      console.log('User is contract owner - upload allowed')
-      canUpload.value = true
-      return
-    }
-
-    // Check if user has patient-specific permissions
-    if (mrn.value && salt.value) {
-      try {
-        const patientId = hashPatientId(mrn.value, salt.value)
-        console.log('Checking patient-specific permissions for ID:', patientId)
-
-        const roles = await props.contract.getRoles(patientId)
-        const pediatricPsychologist = roles[1] // [guardian, psychologist, insurer]
-
-        console.log('Pediatric psychologist for this patient:', pediatricPsychologist)
-
-        if (pediatricPsychologist && pediatricPsychologist.toLowerCase() === props.account.toLowerCase()) {
-          console.log('User is pediatric psychologist for this patient - upload allowed')
-          canUpload.value = true
-          return
-        }
-      } catch (roleError) {
-        console.warn('Error checking patient roles:', roleError)
-      }
-    }
-
-    // Default: no permission
-    console.log('User does not have upload permission')
-    canUpload.value = false
-
-  } catch (error) {
-    console.error('Error checking upload permission:', error)
-    canUpload.value = false
-  }
-}
-
-// Check insurer balance for FLR payment
-const checkInsurerBalance = async () => {
-  if (!props.contract || !mrn.value || !salt.value) return
-
-  try {
-    const patientId = hashPatientId(mrn.value, salt.value)
-    const insurerAddress = await props.contract.insurerOf(patientId)
-
-    if (insurerAddress !== ethers.constants.AddressZero) {
-      const balance = await props.contract.insurerBalances(insurerAddress)
-      insurerBalance.value = balance.toString()
-    }
-
-    const fee = await props.contract.uploadFeeWei()
-    uploadFeeWei.value = fee.toString()
-  } catch (error) {
-    console.error('Error checking insurer balance:', error)
-  }
-}
 
 // Generate random salt
 const generateNewSalt = () => {
@@ -352,10 +191,10 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-// Format ether amount
-const formatEther = (wei: string): string => {
-  return ethers.utils.formatEther(wei)
-}
+// Format ether amount - removed for IPFS-only mode
+// const formatEther = (wei: string): string => {
+//   return ethers.utils.formatEther(wei)
+// }
 
 // Get IPFS view URL
 const getIPFSViewUrl = (hash: string): string => {
@@ -368,21 +207,37 @@ const getIPFSViewUrl = (hash: string): string => {
 
 // Main upload function
 const uploadDocument = async () => {
-  if (!selectedFile.value || !props.contract) return
+  if (!selectedFile.value) return
 
   uploading.value = true
   currentStep.value = 0
   uploadResult.value = null
 
   try {
-    // Step 1: Encrypt file
+    // Step 1: Get wallet signer
     currentStep.value = 1
-    uploadStatus.value = 'Encrypting document...'
+    uploadStatus.value = 'Preparing wallet encryption...'
+
+    if (!props.contract || !window.ethereum) {
+      throw new Error('Wallet not connected properly')
+    }
+
+    const provider = new ethers.providers.Web3Provider(window.ethereum)
+    const signer = provider.getSigner()
+    const patientId = hashPatientId(mrn.value, salt.value)
+
+    // Step 2: Encrypt file with wallet
+    uploadStatus.value = 'Encrypting document with wallet signature...'
 
     const fileBuffer = await selectedFile.value.arrayBuffer()
-    const encryptedContent = encryptFile(fileBuffer, encryptionKey.value, salt.value)
+    const { encryptedContent, metadata } = await encryptFileWithWallet(
+      fileBuffer,
+      signer,
+      patientId,
+      salt.value
+    )
 
-    // Step 2: Upload to IPFS
+    // Step 3: Upload to IPFS
     currentStep.value = 2
     uploadStatus.value = 'Uploading to IPFS...'
 
@@ -399,66 +254,33 @@ const uploadDocument = async () => {
       console.warn('IPFS upload failed, using simple fallback:', ipfsError)
       ipfsHash = await uploadToIPFSSimple(encryptedFile)
     }
-    const ipfsUri = `ipfs://${ipfsHash}`
 
-    // Step 3: Record on blockchain
-    currentStep.value = 3
-    uploadStatus.value = 'Recording on blockchain...'
-
-    const patientId = hashPatientId(mrn.value, salt.value)
-    const docKind = parseInt(docType.value)
-
-    let tx: any
-
-    if (paymentMethod.value === 'flr') {
-      // FLR deduct payment
-      tx = await props.contract.uploadDocumentDeduct(
-        patientId,
-        docKind,
-        ipfsUri
-      )
-    } else {
-      // XRPL payment (simplified - in real app you'd have proper proof)
-      const mockProofId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(xrplProofData.value))
-      const mockStatementId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(`${patientId}_${Date.now()}`))
-      const mockCurrencyHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('USD|mock'))
-
-      tx = await props.contract.uploadDocumentWithXRPLAnyCurrency(
-        patientId,
-        docKind,
-        ipfsUri,
-        ethers.utils.toUtf8Bytes(xrplProofData.value),
-        mockStatementId,
-        mockProofId,
-        attestedUSDc.value,
-        mockCurrencyHash
-      )
-    }
-
-    const receipt = await tx.wait()
-
-    // Find the DocumentUploaded event
-    const uploadEvent = receipt.logs.find((log: any) => {
-      try {
-        const parsed = props.contract!.interface.parseLog(log)
-        return parsed?.name === 'DocumentUploaded'
-      } catch {
-        return false
-      }
-    })
-
-    let version = 1
-    if (uploadEvent) {
-      const parsed = props.contract!.interface.parseLog(uploadEvent)
-      version = Number(parsed?.args[3] || 1)
-    }
-
+    // Success - IPFS only
     uploadResult.value = {
       success: true,
       ipfsHash,
-      txHash: receipt.hash,
-      version
+      message: 'Document successfully uploaded to IPFS!'
     }
+
+    uploadStatus.value = 'Upload complete!'
+
+    // Store upload info locally for future reference
+    const uploadInfo = {
+      filename: selectedFile.value.name,
+      ipfsHash,
+      patientId,
+      docType: docType.value,
+      uploadDate: new Date().toISOString(),
+      metadata, // Store wallet-based encryption metadata
+      encryptionMethod: 'wallet-signature'
+    }
+
+    // Save to localStorage for simple tracking
+    const existingUploads = JSON.parse(localStorage.getItem('medicalVaultUploads') || '[]')
+    existingUploads.push(uploadInfo)
+    localStorage.setItem('medicalVaultUploads', JSON.stringify(existingUploads))
+
+    console.log('✅ Document uploaded to IPFS successfully!', uploadInfo)
 
     uploadStatus.value = 'Upload completed successfully!'
 
@@ -474,30 +296,7 @@ const uploadDocument = async () => {
   }
 }
 
-// Initialize component
-onMounted(async () => {
-  await checkUploadPermission()
-  if (mrn.value && salt.value) {
-    await checkInsurerBalance()
-  }
-})
-
-// Watch for changes in patient details to re-check permissions
-watch([mrn, salt], async () => {
-  if (mrn.value && salt.value) {
-    await checkUploadPermission()
-    await checkInsurerBalance()
-  } else {
-    canUpload.value = false
-  }
-})
-
-// Watch for account changes to re-check permissions
-watch(() => props.account, async () => {
-  if (props.account) {
-    await checkUploadPermission()
-  }
-})
+// Simplified - no permission checking needed for IPFS-only mode
 </script>
 
 <style scoped>
@@ -729,6 +528,38 @@ input, select, textarea {
 
 small {
   color: #666;
+  font-size: 0.9rem;
+}
+
+/* Wallet-based encryption info styles */
+.wallet-encryption-info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.wallet-encryption-info h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.wallet-encryption-info p {
+  margin: 0 0 1rem 0;
+  opacity: 0.9;
+}
+
+.encryption-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.encryption-benefits span {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.5rem;
+  border-radius: 4px;
   font-size: 0.9rem;
 }
 </style>

@@ -3,11 +3,12 @@ import { ref, computed, onMounted } from 'vue'
 import { ethers } from 'ethers'
 import DocumentUpload from './components/DocumentUpload.vue'
 import DocumentDownload from './components/DocumentDownload.vue'
-import RoleSetup from './components/RoleSetup.vue'
+// import RoleSetup from './components/RoleSetup.vue'
 import MedicalVaultABI from '@/assets/MedicalVault.json'
 import { connectToMetaMask, switchToCoston2, isMetaMaskInstalled, getConnectedAccounts } from '@/utils/wallet'
 import { connectWalletSimple, createContractInterface } from '@/utils/wallet-fallback'
 import { connectBasic, switchToCoston2Basic } from '@/utils/wallet-basic'
+// import { initializeContractEvents, destroyContractEvents } from '@/utils/contract-events'
 
 // Reactive state
 const currentView = ref('upload') // 'upload', 'download', 'setup'
@@ -58,6 +59,10 @@ const connectWallet = async () => {
       if (VAULT_ADDRESS) {
         const signer = provider.value.getSigner()
         contract.value = new ethers.Contract(VAULT_ADDRESS, MedicalVaultABI.abi, signer)
+
+        // Initialize event listeners for the contract
+        // console.log('🔗 Initializing contract event listeners...')
+        // initializeContractEvents(contract.value)
       }
     } catch (ethersError) {
       console.warn('Ethers provider creation failed, using basic interface:', ethersError)
@@ -69,6 +74,14 @@ const connectWallet = async () => {
           VAULT_ADDRESS,
           MedicalVaultABI.abi
         )
+
+        // Try to initialize event listeners with basic interface too
+        // try {
+        //   console.log('🔗 Initializing contract event listeners (basic interface)...')
+        //   initializeContractEvents(contract.value)
+        // } catch (eventError) {
+        //   console.warn('Event listener initialization failed with basic interface:', eventError)
+        // }
       }
     }
 
@@ -105,6 +118,10 @@ const setupEventListeners = () => {
       if (provider.value && VAULT_ADDRESS) {
         const signer = provider.value.getSigner()
         contract.value = new ethers.Contract(VAULT_ADDRESS, MedicalVaultABI.abi, signer)
+
+        // Reinitialize event listeners with new contract instance
+        // console.log('🔄 Reinitializing contract event listeners for new account...')
+        // initializeContractEvents(contract.value)
       }
     }
   })
@@ -119,6 +136,9 @@ const setupEventListeners = () => {
 
 // Disconnect wallet
 const disconnect = () => {
+  // Destroy contract event listeners
+  // destroyContractEvents()
+
   isConnected.value = false
   account.value = ''
   chainId.value = 0
@@ -181,13 +201,13 @@ onMounted(async () => {
           >
             📥 Download Document
           </button>
-          <button
+          <!-- <button
             @click="currentView = 'setup'"
             :class="{ active: currentView === 'setup' }"
             class="nav-btn setup-btn"
           >
             ⚙️ Admin Setup
-          </button>
+          </button> -->
         </nav>
 
         <!-- Wallet Status -->
@@ -271,13 +291,15 @@ onMounted(async () => {
           :isConnected="isConnected"
         />
 
-        <!-- Role Setup -->
+        <!-- Role Setup - Commented out for IPFS-only mode -->
+        <!--
         <RoleSetup
           v-if="currentView === 'setup'"
           :account="account"
           :contract="contract"
           :isConnected="isConnected"
         />
+        -->
       </div>
     </main>
 

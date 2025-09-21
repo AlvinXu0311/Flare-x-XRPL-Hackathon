@@ -1,4 +1,5 @@
 // Alternative wallet connection approach for problematic environments
+import { ethers } from 'ethers'
 
 export interface WalletInfo {
   account: string
@@ -50,8 +51,8 @@ export async function connectWalletSimple(): Promise<WalletInfo> {
 
 export async function createContractInterface(ethereum: any, contractAddress: string, abi: any[]): Promise<any> {
   try {
-    // Create a minimal contract interface without ethers provider
-    return {
+    // Create a complete contract interface that mimics ethers contract
+    const contractInterface = {
       address: contractAddress,
       abi,
       ethereum,
@@ -60,21 +61,23 @@ export async function createContractInterface(ethereum: any, contractAddress: st
       async call(method: string, params: any[] = []): Promise<any> {
         const data = encodeMethodCall(method, params, abi)
 
-        return await ethereum.request({
+        const result = await ethereum.request({
           method: 'eth_call',
           params: [{
             to: contractAddress,
             data
           }, 'latest']
         })
+
+        return decodeResult(method, result, abi)
       },
 
       // Send transactions
-      async send(method: string, params: any[] = [], value: string = '0x0'): Promise<string> {
+      async send(method: string, params: any[] = [], value: string = '0x0'): Promise<any> {
         const data = encodeMethodCall(method, params, abi)
         const accounts = await ethereum.request({ method: 'eth_accounts' })
 
-        return await ethereum.request({
+        const txHash = await ethereum.request({
           method: 'eth_sendTransaction',
           params: [{
             from: accounts[0],
@@ -83,59 +86,139 @@ export async function createContractInterface(ethereum: any, contractAddress: st
             value
           }]
         })
+
+        // Return a transaction object that mimics ethers
+        return {
+          hash: txHash,
+          wait: async () => {
+            // Simple wait implementation - poll for receipt
+            let receipt = null
+            let attempts = 0
+            const maxAttempts = 30
+
+            while (!receipt && attempts < maxAttempts) {
+              try {
+                receipt = await ethereum.request({
+                  method: 'eth_getTransactionReceipt',
+                  params: [txHash]
+                })
+
+                if (receipt) {
+                  return receipt
+                }
+              } catch (error) {
+                console.warn('Error getting receipt:', error)
+              }
+
+              await new Promise(resolve => setTimeout(resolve, 2000))
+              attempts++
+            }
+
+            throw new Error('Transaction receipt not found after timeout')
+          }
+        }
       }
     }
+
+    // Dynamically add all contract methods from ABI
+    abi.forEach((item: any) => {
+      if (item.type === 'function') {
+        const methodName = item.name
+
+        // Create the method on the contract interface
+        ;(contractInterface as any)[methodName] = async (...args: any[]) => {
+          // Filter out any undefined arguments
+          const cleanArgs = args.filter(arg => arg !== undefined)
+
+          console.log(`Calling contract method: ${methodName} with args:`, cleanArgs)
+
+          // Determine if this is a view/pure function or a state-changing function
+          const isView = item.stateMutability === 'view' ||
+                        item.stateMutability === 'pure' ||
+                        item.constant === true
+
+          if (isView) {
+            // Use call for view functions
+            return await contractInterface.call(methodName, cleanArgs)
+          } else {
+            // Use send for state-changing functions
+            return await contractInterface.send(methodName, cleanArgs)
+          }
+        }
+      }
+    })
+
+    // Add event listener capabilities
+    ;(contractInterface as any).on = (eventName: string, callback: Function) => {
+      console.log(`Event listener added for: ${eventName}`, typeof callback)
+      // For basic interface, we'll store listeners but not actually implement them
+      // The event system will be handled by the main event listener service
+    }
+
+    ;(contractInterface as any).removeAllListeners = () => {
+      console.log('All event listeners removed (basic interface)')
+    }
+
+    console.log('✅ Enhanced contract interface created with dynamic methods')
+    return contractInterface
+
   } catch (error) {
     throw new Error(`Failed to create contract interface: ${error}`)
   }
 }
 
-// Simple ABI encoding for common method calls
+// Proper ABI encoding using ethers.js utilities
 function encodeMethodCall(method: string, params: any[], abi: any[]): string {
-  // Find the method in ABI
-  const methodAbi = abi.find(item =>
-    item.type === 'function' && item.name === method
-  )
+  try {
+    // Create interface from ABI
+    const contractInterface = new ethers.utils.Interface(abi)
 
-  if (!methodAbi) {
-    throw new Error(`Method ${method} not found in ABI`)
+    // Encode the function call
+    const encodedCall = contractInterface.encodeFunctionData(method, params)
+
+    console.log(`Encoded call for ${method}:`, encodedCall)
+    return encodedCall
+  } catch (error) {
+    console.error(`Failed to encode method call for ${method}:`, error)
+    throw new Error(`Failed to encode method call: ${error}`)
   }
-
-  // For demo purposes, return a simple encoded call
-  // In production, you'd use proper ABI encoding
-  const methodId = getMethodId(methodAbi)
-
-  // Simple parameter encoding (this is very basic - use proper library in production)
-  let encodedParams = ''
-  if (params.length > 0) {
-    // Basic encoding for common types
-    encodedParams = params.map(param => {
-      if (typeof param === 'string' && param.startsWith('0x')) {
-        return param.slice(2).padStart(64, '0')
-      } else if (typeof param === 'number') {
-        return param.toString(16).padStart(64, '0')
-      } else if (typeof param === 'string') {
-        // For string, encode as bytes32 (simplified)
-        return Buffer.from(param).toString('hex').padStart(64, '0')
-      }
-      return '0'.repeat(64)
-    }).join('')
-  }
-
-  return methodId + encodedParams
 }
 
-function getMethodId(methodAbi: any): string {
-  // Generate method ID from signature (simplified)
-  const signature = `${methodAbi.name}(${methodAbi.inputs.map((input: any) => input.type).join(',')})`
+// Decode contract call results
+function decodeResult(method: string, result: string, abi: any[]): any {
+  try {
+    if (!result || result === '0x') {
+      return null
+    }
 
-  // Simple hash (in production, use keccak256)
-  let hash = 0
-  for (let i = 0; i < signature.length; i++) {
-    const char = signature.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32-bit integer
+    // Create interface from ABI
+    const contractInterface = new ethers.utils.Interface(abi)
+
+    // Find the method in ABI to get return types
+    const methodAbi = abi.find(item =>
+      item.type === 'function' && item.name === method
+    )
+
+    if (!methodAbi || !methodAbi.outputs) {
+      console.warn(`No outputs defined for method ${method}`)
+      return result
+    }
+
+    // Decode the result
+    const decoded = contractInterface.decodeFunctionResult(method, result)
+
+    console.log(`Decoded result for ${method}:`, decoded)
+
+    // If there's only one return value, return it directly
+    if (decoded.length === 1) {
+      return decoded[0]
+    }
+
+    // If multiple return values, return as array
+    return decoded
+  } catch (error) {
+    console.error(`Failed to decode result for ${method}:`, error)
+    // Return raw result if decoding fails
+    return result
   }
-
-  return '0x' + Math.abs(hash).toString(16).slice(0, 8).padStart(8, '0')
 }
