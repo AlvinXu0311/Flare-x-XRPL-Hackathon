@@ -156,7 +156,7 @@ curl https://ipfs.io/ipfs/[YOUR_FILE_CID] > medical_document.bin
 ### **Environment Variables**
 ```env
 # Frontend (.env)
-VITE_VAULT_ADDRESS=0x6cd4FEb053E613dF60CF10f0DD1D9597051D241B
+VITE_VAULT_ADDRESS=0x
 VITE_CHAIN_ID=114
 VITE_RPC_URL=https://rpc-coston2.flare.network
 
