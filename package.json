@@ -1,0 +1,27 @@
+{
+  "name": "flare-x-xrpl-hackathon",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@truffle/hdwallet-provider": "^2.1.15",
+    "dotenv": "^17.2.2",
+    "ethers": "^5.8.0",
+    "hardhat": "^3.0.6",
+    "truffle": "^5.11.5"
+  },
+  "dependencies": {
+    "web3": "^4.16.0"
+  }
+}
