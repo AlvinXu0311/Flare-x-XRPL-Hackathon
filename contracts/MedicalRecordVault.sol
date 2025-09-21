@@ -2,38 +2,27 @@
 pragma solidity ^0.8.21;
 
 /**
- * MedicalRecordVaultXRPL (Flare EVM)
- * ----------------------------------
+ * MedicalRecordVaultXRPL (Flare EVM) — no role/permission gating
+ * --------------------------------------------------------------
  * - Stores ONLY pointers (hash/CID/URI) to off-chain encrypted docs.
- * - Per patientId (bytes32): owner sets guardian, pediatricPsychologist, and insurer.
- * - Guardian grants READ permissions to parties.
- * - Pediatric Psychologist (or owner) uploads documents.
+ * - Roles (guardian/pediatricPsychologist/insurer) remain settable & viewable,
+ *   but are NOT enforced for uploads/reads.
  *
  * Payment options for each upload (choose one):
  *   A) FLR-deduct: insurer deposits native FLR; contract deducts per upload.
- *   B) XRPL any-currency via FDC attestation: verify XRPL payment proof where the
- *      verifier attests the USD value paid (so insurer can pay in XRP or any IOU).
- *   C) (Optional legacy) XRPL + FTSO XRP pricing: verify XRPL proof + price XRP via FTSO.
- *
- * Reads are FREE (view). If you want an on-chain log, call getDocument (emits).
+ *   B) XRPL any-currency via FDC attestation: verifier attests USD cents paid.
+ *   C) (Optional legacy) XRPL + FTSO XRP pricing: drops attested by FDC vs USD fee.
  *
  * SECURITY:
  * - Never store PII on-chain. Derive patientId off-chain (e.g., keccak256(MRN|salt)).
- * - hashURI must point to encrypted content (IPFS/S3) and be encrypted.
- *
- * NOTE:
- * - Refactored with helpers to avoid "stack too deep".
+ * - hashURI must point to encrypted content.
  */
 
 interface IFDC {
-    /// Generic verification of an XRPL payment proof tied to a statement.
-    /// Your FDC implementation should bind `statementId` to the expected payer/beneficiary context.
     function verify(bytes calldata proof, bytes32 statementId) external view returns (bool);
 }
 
-/// Optional: XRP oracle for XRP-only pricing path
 interface IFTSO {
-    /// Returns (XRP price in USD with `decimals`, decimals, timestamp)
     function getXRPUSDPrice() external view returns (uint256 price, uint8 decimals, uint256 timestamp);
 }
 
@@ -48,23 +37,21 @@ contract MedicalRecordVaultXRPL {
 
         // Payment trace
         bytes32 paymentProof;   // XRPL proof id; 0x0 for FLR-deduct
-        uint256 paidDrops;      // For XRP pricing path (B-legacy); 0 for others
+        uint256 paidDrops;      // For XRP pricing path (legacy)
         uint256 paidUSDc;       // For XRPL any-currency path; USD cents attested by FDC
-        bytes32 currencyHash;   // For info (any-currency path): keccak256(currencyCode|issuer)
+        bytes32 currencyHash;   // Info (any-currency path): keccak256(currencyCode|issuer)
     }
 
     struct RecordSet {
         mapping(uint8 => DocMeta) docs; // one DocMeta per kind
-        address guardian;               // guardian who grants read permissions
-        address pediatricPsychologist;  // designated uploader (primary)
+        address guardian;               // retained metadata (NOT enforced)
+        address pediatricPsychologist;  // retained metadata (NOT enforced)
     }
 
     /* ──────────────── Events ──────────────── */
     event GuardianSet(bytes32 indexed patientId, address indexed guardian);
     event PsychologistSet(bytes32 indexed patientId, address indexed psychologist);
     event InsurerSet(bytes32 indexed patientId, address indexed insurer);
-
-    event ReadAccessGranted(bytes32 indexed patientId, address indexed who, bool allowed);
 
     event UploadPaidFLR(bytes32 indexed patientId, uint8 indexed kind, address indexed insurer, uint256 version, uint256 amountWei);
     event UploadPaidXRPLAny(
@@ -114,7 +101,6 @@ contract MedicalRecordVaultXRPL {
     /* ──────────────── Storage ──────────────── */
     mapping(bytes32 => RecordSet) private records;                 // patient state
     mapping(bytes32 => address)  public insurerOf;                 // patient -> insurer
-    mapping(bytes32 => mapping(address => bool)) public canRead;   // read ACL
 
     // Billing (FLR-deduct)
     mapping(address => uint256) public insurerBalances; // deposits by insurer
@@ -132,30 +118,7 @@ contract MedicalRecordVaultXRPL {
     IFTSO public ftso;                       // optional (for XRP-only pricing path)
     uint256 public maxOracleStaleness = 10 minutes;
 
-    /* ──────────────── Modifiers ──────────────── */
-    modifier onlyGuardianOrOwner(bytes32 patientId) {
-        require(msg.sender == records[patientId].guardian || msg.sender == owner, "not guardian/owner");
-        _;
-    }
-    modifier onlyUploader(bytes32 patientId) {
-        // Primary uploader is the pediatric psychologist; owner is allowed for admin ops/testing
-        address s = msg.sender;
-        require(
-            s == owner || s == records[patientId].pediatricPsychologist,
-            "not psychologist/owner"
-        );
-        _;
-    }
-    modifier onlyReader(bytes32 patientId) {
-        address s = msg.sender;
-        require(
-            s == owner || s == records[patientId].guardian || canRead[patientId][s],
-            "not allowed"
-        );
-        _;
-    }
-
-    /* ──────────────── Admin / Setup ──────────────── */
+    /* ──────────────── Admin / Setup (metadata only) ──────────────── */
     function setGuardian(bytes32 patientId, address guardian_) external onlyOwner {
         require(guardian_ != address(0), "guardian zero");
         records[patientId].guardian = guardian_;
@@ -172,12 +135,6 @@ contract MedicalRecordVaultXRPL {
         require(insurer != address(0), "insurer zero");
         insurerOf[patientId] = insurer;
         emit InsurerSet(patientId, insurer);
-    }
-
-    function grantRead(bytes32 patientId, address who, bool allowed) external onlyGuardianOrOwner(patientId) {
-        require(who != address(0), "zero");
-        canRead[patientId][who] = allowed;
-        emit ReadAccessGranted(patientId, who, allowed);
     }
 
     function setUploadFees(uint256 feeWei, uint256 feeUSDc_, address collector) external onlyOwner {
@@ -220,14 +177,14 @@ contract MedicalRecordVaultXRPL {
         emit Withdraw(to, amount);
     }
 
-    /* ──────────────── UPLOADS ──────────────── */
+    /* ──────────────── UPLOADS (no role checks) ──────────────── */
 
     /// A) FLR-deduct mode: contract deducts fee from insurer deposit.
     function uploadDocumentDeduct(
         bytes32 patientId,
         uint8   kind,        // 0/1/2
         string calldata hashURI
-    ) external onlyUploader(patientId) {
+    ) external {
         _writeDoc(patientId, kind, hashURI);
 
         address insurer = insurerOf[patientId];
@@ -249,9 +206,6 @@ contract MedicalRecordVaultXRPL {
     }
 
     /// B) XRPL any-currency path via FDC attestation of USD value.
-    /// - `xrplProof` + `statementId` are verified by FDC.
-    /// - `attestedUSDc` is the USD cents paid (any XRPL currency) attested by the verifier.
-    /// - `currencyHash` is informational: keccak256(abi.encodePacked(currencyCode, "|", issuerAddressOnXRPL))
     function uploadDocumentWithXRPLAnyCurrency(
         bytes32 patientId,
         uint8   kind,
@@ -261,12 +215,12 @@ contract MedicalRecordVaultXRPL {
         bytes32 proofId,
         uint256 attestedUSDc,
         bytes32 currencyHash
-    ) external onlyUploader(patientId) {
-        _requireFdc();                         // preflight
-        _verifyFDC(xrplProof, statementId);    // 1) attestation valid
+    ) external {
+        _requireFdc();
+        _verifyFDC(xrplProof, statementId);
         require(attestedUSDc >= uploadFeeUSDc, "USD attestation too small");
 
-        _writeDoc(patientId, kind, hashURI);  // 2) write + mark paid
+        _writeDoc(patientId, kind, hashURI);
         DocMeta storage d = records[patientId].docs[kind];
         paidVersion[patientId][kind] = d.version;
         d.paymentProof = proofId;
@@ -278,7 +232,6 @@ contract MedicalRecordVaultXRPL {
     }
 
     /// C) (Legacy/optional) XRPL + FDC + FTSO (XRP-only priced in USD via oracle).
-    /// xrplPaidDrops = amount (in drops; 1 XRP = 1e6 drops) attested by FDC.
     function uploadDocumentWithXRPProof(
         bytes32 patientId,
         uint8   kind,
@@ -287,13 +240,13 @@ contract MedicalRecordVaultXRPL {
         bytes32 statementId,
         bytes32 proofId,
         uint256 xrplPaidDrops
-    ) external onlyUploader(patientId) {
-        _requireFdcAndFtso();                         // preflight checks
-        _verifyFDC(xrplProof, statementId);           // 1) attestation valid
-        uint256 requiredDrops = _requiredDrops();     // 2) price from oracle -> required drops
+    ) external {
+        _requireFdcAndFtso();
+        _verifyFDC(xrplProof, statementId);
+        uint256 requiredDrops = _requiredDrops();
         require(xrplPaidDrops >= requiredDrops, "XRP payment too small");
 
-        _writeDoc(patientId, kind, hashURI);         // 3) write + mark paid
+        _writeDoc(patientId, kind, hashURI);
         DocMeta storage d = records[patientId].docs[kind];
         paidVersion[patientId][kind] = d.version;
         d.paymentProof = proofId;
@@ -327,25 +280,21 @@ contract MedicalRecordVaultXRPL {
         return _requiredXrpDropsFromUSDc(uploadFeeUSDc, px, dec);
     }
 
-    /// Internal write: increments version and stores URI/timestamp.
+    /// Internal write: increments version and stores URI/timestamp. (No role checks)
     function _writeDoc(bytes32 patientId, uint8 kind, string calldata hashURI) internal {
-        require(records[patientId].guardian != address(0), "guardian not set");
-        require(records[patientId].pediatricPsychologist != address(0), "psychologist not set");
         require(kind <= uint8(DocKind.Intake), "bad kind");
-
         DocMeta storage d = records[patientId].docs[kind];
         d.hashURI  = hashURI;
         d.version += 1;
         d.updatedAt = block.timestamp;
-
         emit DocumentUploaded(patientId, kind, hashURI, d.version);
     }
 
     /* ──────────────── READ (free; requires paid) ──────────────── */
 
+    /// Anyone may read if the latest version has been paid for.
     function getDocument(bytes32 patientId, uint8 kind)
         external
-        onlyReader(patientId)
         returns (string memory, uint256, uint256, bytes32)
     {
         require(kind <= uint8(DocKind.Intake), "bad kind");
@@ -366,25 +315,12 @@ contract MedicalRecordVaultXRPL {
         return (d.hashURI, d.version, d.updatedAt, d.paymentProof, d.paidUSDc, d.paidDrops, d.currencyHash);
     }
 
-    function getDocPayment(bytes32 patientId, uint8 kind)
-        external
-        view
-        returns (uint256 paidUSDc, uint256 paidDrops, uint256 paidVersion_, bool flareDeduct)
-    {
-        DocMeta storage d = records[patientId].docs[kind];
-        return (d.paidUSDc, d.paidDrops, paidVersion[patientId][kind], d.paymentProof == bytes32(0) && d.version > 0);
-    }
-
     function getRoles(bytes32 patientId)
         external
         view
         returns (address guardian, address pediatricPsychologist, address insurer)
     {
         return (records[patientId].guardian, records[patientId].pediatricPsychologist, insurerOf[patientId]);
-    }
-
-    function hasRead(bytes32 patientId, address who) external view returns (bool) {
-        return (who == owner || who == records[patientId].guardian || canRead[patientId][who]);
     }
 
     /// Human-readable document kind names
