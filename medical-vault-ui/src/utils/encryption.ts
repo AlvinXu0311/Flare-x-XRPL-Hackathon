@@ -494,7 +494,7 @@ export async function encryptTextWithWallet(
  * Decrypt text using wallet signature verification
  */
 export async function decryptTextWithWallet(
-  encryptedContent: string,
+  encryptedContent: string | ArrayBuffer,
   signer: any,
   metadata: any
 ): Promise<string> {
@@ -506,19 +506,81 @@ export async function decryptTextWithWallet(
     }
 
     // Derive the same key using wallet signature
+    console.log('Decryption - metadata:', metadata)
     const walletKey = await deriveKeyFromWallet(signer, metadata.patientId, metadata.salt)
+    console.log('Decryption - derived key length:', walletKey.length)
 
-    // Decrypt
-    const decrypted = CryptoJS.AES.decrypt(encryptedContent, walletKey)
-    const decryptedText = decrypted.toString(CryptoJS.enc.Utf8)
+    // Convert ArrayBuffer to string if needed
+    let encryptedString: string
+    if (encryptedContent instanceof ArrayBuffer) {
+      // Convert ArrayBuffer to base64 string
+      const uint8Array = new Uint8Array(encryptedContent)
+      encryptedString = btoa(String.fromCharCode(...uint8Array))
+      console.log('Converted ArrayBuffer to string, length:', encryptedString.length)
+    } else {
+      encryptedString = encryptedContent
+      console.log('Using string content directly, length:', encryptedString.length)
+    }
 
-    if (!decryptedText) {
-      throw new Error('Decryption failed - invalid key or corrupted data')
+    console.log('Encrypted string preview:', encryptedString.substring(0, 100) + '...')
+
+    // Decrypt with better error handling
+    let decrypted: CryptoJS.lib.WordArray
+    try {
+      decrypted = CryptoJS.AES.decrypt(encryptedString, walletKey)
+      console.log('AES decrypt successful, WordArray sigBytes:', decrypted.sigBytes)
+    } catch (decryptError) {
+      throw new Error(`AES decryption failed: ${(decryptError as Error).message}`)
+    }
+
+    // Convert to UTF-8 with error checking
+    let decryptedText: string
+    try {
+      decryptedText = decrypted.toString(CryptoJS.enc.Utf8)
+      console.log('UTF-8 conversion result length:', decryptedText.length)
+      console.log('Decrypted text preview:', decryptedText.substring(0, 50) + '...')
+    } catch (utf8Error) {
+      throw new Error(`UTF-8 conversion failed: ${(utf8Error as Error).message}`)
+    }
+
+    if (!decryptedText || decryptedText.length === 0) {
+      console.warn('Primary decryption failed, trying fallback methods...')
+
+      // Try fallback: maybe the data was encrypted with a different key derivation
+      try {
+        // Try with different salt or patient ID combinations
+        const fallbackKeys = [
+          await deriveKeyFromWallet(signer, metadata.patientId, metadata.salt || ''),
+          await deriveKeyFromWallet(signer, metadata.patientId || '', metadata.salt),
+          // Try with current wallet address as part of key
+          await deriveKeyFromWallet(signer, currentAddress.toLowerCase(), metadata.salt),
+          // Try with hardcoded patientId (common in uploads)
+          await deriveKeyFromWallet(signer, "0xd976ece7f97402cc704731e8d64e747d1126161565a1208473a9bf64bffc8570", metadata.salt)
+        ]
+
+        for (let i = 0; i < fallbackKeys.length; i++) {
+          try {
+            const fallbackDecrypted = CryptoJS.AES.decrypt(encryptedString, fallbackKeys[i])
+            const fallbackText = fallbackDecrypted.toString(CryptoJS.enc.Utf8)
+            if (fallbackText && fallbackText.length > 0) {
+              console.log(`Fallback method ${i} succeeded!`)
+              return fallbackText
+            }
+          } catch (e) {
+            console.log(`Fallback method ${i} failed:`, (e as Error).message)
+          }
+        }
+      } catch (fallbackError) {
+        console.error('All fallback methods failed:', fallbackError)
+      }
+
+      throw new Error('Decryption result is empty - invalid key or corrupted data')
     }
 
     return decryptedText
   } catch (error) {
-    throw new Error(`Wallet text decryption failed: ${error}`)
+    console.error('Decryption error details:', error)
+    throw new Error(`Wallet text decryption failed: ${(error as Error).message}`)
   }
 }
 

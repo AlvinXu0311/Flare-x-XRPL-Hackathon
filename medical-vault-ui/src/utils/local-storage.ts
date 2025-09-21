@@ -125,6 +125,76 @@ class LocalFileStorage {
     }
   }
 
+  // Delete files by wallet address
+  async deleteFilesByWallet(walletAddress: string): Promise<number> {
+    const db = await this.initDB()
+    const transaction = db.transaction([this.storeName], 'readwrite')
+    const store = transaction.objectStore(this.storeName)
+
+    return new Promise((resolve, reject) => {
+      const getAllRequest = store.getAll()
+
+      getAllRequest.onsuccess = () => {
+        const files = getAllRequest.result as StoredFile[]
+        const filesToDelete = files.filter(file =>
+          file.metadata?.walletAddress?.toLowerCase() === walletAddress.toLowerCase()
+        )
+
+        let deletedCount = 0
+        let completed = 0
+
+        if (filesToDelete.length === 0) {
+          resolve(0)
+          return
+        }
+
+        filesToDelete.forEach(file => {
+          const deleteRequest = store.delete(file.id)
+          deleteRequest.onsuccess = () => {
+            deletedCount++
+            completed++
+            if (completed === filesToDelete.length) {
+              resolve(deletedCount)
+            }
+          }
+          deleteRequest.onerror = () => {
+            completed++
+            if (completed === filesToDelete.length) {
+              resolve(deletedCount)
+            }
+          }
+        })
+      }
+
+      getAllRequest.onerror = () => reject(getAllRequest.error)
+    })
+  }
+
+  // Delete files by transaction hash
+  async deleteFileByTxHash(txHash: string): Promise<boolean> {
+    const db = await this.initDB()
+    const transaction = db.transaction([this.storeName], 'readwrite')
+    const store = transaction.objectStore(this.storeName)
+    const index = store.index('txHash')
+
+    return new Promise((resolve, reject) => {
+      const getRequest = index.get(txHash)
+
+      getRequest.onsuccess = () => {
+        const file = getRequest.result
+        if (file) {
+          const deleteRequest = store.delete(file.id)
+          deleteRequest.onsuccess = () => resolve(true)
+          deleteRequest.onerror = () => reject(deleteRequest.error)
+        } else {
+          resolve(false)
+        }
+      }
+
+      getRequest.onerror = () => reject(getRequest.error)
+    })
+  }
+
   // Clear all files (for testing/cleanup)
   async clearAllFiles(): Promise<void> {
     const db = await this.initDB()
@@ -190,6 +260,14 @@ export async function deleteStoredFile(fileId: string): Promise<void> {
 
 export async function getLocalStorageInfo() {
   return await localFileStorage.getStorageInfo()
+}
+
+export async function deleteFilesByWallet(walletAddress: string): Promise<number> {
+  return await localFileStorage.deleteFilesByWallet(walletAddress)
+}
+
+export async function deleteFileByTxHash(txHash: string): Promise<boolean> {
+  return await localFileStorage.deleteFileByTxHash(txHash)
 }
 
 // Utility to convert ArrayBuffer to Blob for download

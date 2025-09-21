@@ -1,81 +1,32 @@
-{"timestamp":"2025-09-21 05:54:28","level":"error","message":"Failed to start server:","service":"medical-vault-backend","name":"SequelizeConnectionRefusedError","parent":{"code":"ECONNREFUSED"},"original":{"code":"ECONNREFUSED"},"stack":"SequelizeConnectionRefusedError\n    at Client._connectionCallback (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/sequelize/lib/dialects/postgres/connection-manager.js:133:24)\n    at Client._handleErrorWhileConnecting (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/pg/lib/client.js:336:19)\n    at Client._handleErrorEvent (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/pg/lib/client.js:346:19)\n    at Connection.emit (node:events:519:28)\n    at Socket.reportStreamError (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/pg/lib/connection.js:57:12)\n    at Socket.emit (node:events:519:28)\n    at emitErrorNT (node:internal/streams/destroy:170:8)\n    at emitErrorCloseNT (node:internal/streams/destroy:129:3)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)"}
-{"timestamp":"2025-09-21 05:54:36","level":"error","message":"Failed to start server:","service":"medical-vault-backend","name":"SequelizeConnectionRefusedError","parent":{"code":"ECONNREFUSED"},"original":{"code":"ECONNREFUSED"},"stack":"SequelizeConnectionRefusedError\n    at Client._connectionCallback (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/sequelize/lib/dialects/postgres/connection-manager.js:133:24)\n    at Client._handleErrorWhileConnecting (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/pg/lib/client.js:336:19)\n    at Client._handleErrorEvent (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/pg/lib/client.js:346:19)\n    at Connection.emit (node:events:519:28)\n    at Socket.reportStreamError (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/pg/lib/connection.js:57:12)\n    at Socket.emit (node:events:519:28)\n    at emitErrorNT (node:internal/streams/destroy:170:8)\n    at emitErrorCloseNT (node:internal/streams/destroy:129:3)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)"}
-{"timestamp":"2025-09-21 05:55:28","level":"error","message":"Failed to start server:","service":"medical-vault-backend","name":"SequelizeConnectionRefusedError","parent":{"code":"ECONNREFUSED"},"original":{"code":"ECONNREFUSED"},"stack":"SequelizeConnectionRefusedError\n    at Client._connectionCallback (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/sequelize/lib/dialects/postgres/connection-manager.js:133:24)\n    at Client._handleErrorWhileConnecting (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/pg/lib/client.js:336:19)\n    at Client._handleErrorEvent (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/pg/lib/client.js:346:19)\n    at Connection.emit (node:events:519:28)\n    at Socket.reportStreamError (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/pg/lib/connection.js:57:12)\n    at Socket.emit (node:events:519:28)\n    at emitErrorNT (node:internal/streams/destroy:170:8)\n    at emitErrorCloseNT (node:internal/streams/destroy:129:3)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)"}
-{"timestamp":"2025-09-21 05:57:10","level":"info","message":"PostgreSQL database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:57:16","level":"info","message":"PostgreSQL database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:57:24","level":"info","message":"PostgreSQL database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:00","level":"info","message":"PostgreSQL database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:09","level":"info","message":"PostgreSQL database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:09","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:09","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:09","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:09","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:13","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:13","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:13","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:13","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:13","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:18","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:50","level":"info","message":"Received SIGTERM. Starting graceful shutdown...","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:51","level":"info","message":"Database connections closed","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:56","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:56","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:56","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:56","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:58:56","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:59:10","level":"info","message":"Received SIGTERM. Starting graceful shutdown...","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:59:10","level":"info","message":"Database connections closed","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:59:18","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:59:18","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:59:18","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:59:18","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:59:18","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:59:36","level":"info","message":"Received SIGTERM. Starting graceful shutdown...","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 05:59:36","level":"info","message":"Database connections closed","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:00:04","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:00:04","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:00:04","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:00:04","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:00:04","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:29","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:29","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:29","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:29","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:29","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:29","level":"info","message":"Received SIGTERM. Starting graceful shutdown...","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:29","level":"info","message":"Database connections closed","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:49","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:49","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:49","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:49","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:02:49","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:03:24","level":"info","message":"Received SIGINT. Starting graceful shutdown...","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:03:24","level":"info","message":"Database connections closed","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:03:31","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:03:31","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:03:31","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:03:31","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:03:31","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:05:48","level":"info","message":"Received SIGINT. Starting graceful shutdown...","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:05:48","level":"info","message":"Database connections closed","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:05:54","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:05:54","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:05:54","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:05:54","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:05:54","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:09:41","level":"info","message":"Received SIGINT. Starting graceful shutdown...","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:09:41","level":"info","message":"Database connections closed","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:10:05","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:10:05","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:10:05","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:10:05","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:10:05","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:11:03","level":"info","message":"Received SIGINT. Starting graceful shutdown...","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:11:03","level":"info","message":"Database connections closed","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:14:01","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:14:01","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:14:01","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:14:01","level":"info","message":"Environment: development","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:14:01","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:28:34","level":"info","message":"Received SIGINT. Starting graceful shutdown...","service":"medical-vault-backend"}
-{"timestamp":"2025-09-21 06:28:34","level":"info","message":"Database connections closed","service":"medical-vault-backend"}
+✅ Database table initialized
+node:events:497
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::3002
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Function.listen (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/node_modules/express/lib/application.js:635:24)
+    at startServer (/usr/Flare-x-XRPL-Hackathon/medical-vault-backend/mapping-server-sqlite.js:392:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '::',
+  port: 3002
+}
+
+Node.js v22.19.0
+{"timestamp":"2025-09-21 08:37:29","level":"info","message":"Received SIGINT. Starting graceful shutdown...","service":"medical-vault-backend"}
+{"timestamp":"2025-09-21 08:37:29","level":"info","message":"Database connections closed","service":"medical-vault-backend"}
+{"timestamp":"2025-09-21 08:37:52","level":"info","message":"SQLite database connection established successfully","service":"medical-vault-backend"}
+{"timestamp":"2025-09-21 08:37:52","level":"info","message":"Using SQLite database only","service":"medical-vault-backend"}
+{"timestamp":"2025-09-21 08:37:52","level":"info","message":"Medical Vault Backend API server running on 0.0.0.0:3001","service":"medical-vault-backend"}
+{"timestamp":"2025-09-21 08:37:52","level":"info","message":"Environment: development","service":"medical-vault-backend"}
+{"timestamp":"2025-09-21 08:37:52","level":"info","message":"API Prefix: /api/v1","service":"medical-vault-backend"}
+{"timestamp":"2025-09-21 08:39:22","level":"info","message":"Received SIGINT. Starting graceful shutdown...","service":"medical-vault-backend"}
+{"timestamp":"2025-09-21 08:39:22","level":"info","message":"Database connections closed","service":"medical-vault-backend"}

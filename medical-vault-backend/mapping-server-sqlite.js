@@ -243,6 +243,135 @@ app.get('/api/mappings/tx/:hash', async (req, res) => {
   }
 });
 
+// Delete mapping by transaction hash
+app.delete('/api/mappings/tx/:hash', async (req, res) => {
+  try {
+    const { hash } = req.params;
+
+    const stmt = db.prepare('DELETE FROM document_mappings WHERE txHash = ?');
+
+    stmt.run([hash], function(err) {
+      if (err) {
+        console.error('Delete mapping by tx hash error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to delete mapping',
+          error: err.message
+        });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Mapping not found for this transaction hash'
+        });
+      }
+
+      console.log(`Deleted mapping for transaction: ${hash}`);
+      res.json({
+        success: true,
+        message: 'Mapping deleted successfully',
+        deletedCount: this.changes
+      });
+    });
+
+    stmt.finalize();
+
+  } catch (error) {
+    console.error('Delete mapping by tx hash error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete mapping',
+      error: error.message
+    });
+  }
+});
+
+// Clear mappings by wallet address
+app.delete('/api/mappings/wallet/:address', async (req, res) => {
+  try {
+    const { address } = req.params;
+
+    const stmt = db.prepare('DELETE FROM document_mappings WHERE walletAddress = ?');
+
+    stmt.run([address], function(err) {
+      if (err) {
+        console.error('Clear mappings by wallet error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to clear mappings',
+          error: err.message
+        });
+      }
+
+      console.log(`Cleared ${this.changes} mappings for wallet: ${address}`);
+      res.json({
+        success: true,
+        message: `Cleared ${this.changes} mappings for wallet`,
+        deletedCount: this.changes
+      });
+    });
+
+    stmt.finalize();
+
+  } catch (error) {
+    console.error('Clear mappings by wallet error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to clear mappings',
+      error: error.message
+    });
+  }
+});
+
+// Clear database records
+app.delete('/api/mappings/clear', async (req, res) => {
+  try {
+    const { walletAddress, days } = req.query;
+
+    let deleteQuery = 'DELETE FROM document_mappings';
+    let params = [];
+
+    if (walletAddress) {
+      deleteQuery += ' WHERE walletAddress = ?';
+      params.push(walletAddress);
+    } else if (days) {
+      deleteQuery += " WHERE uploadDate < datetime('now', '-' || ? || ' days')";
+      params.push(days);
+    }
+
+    const stmt = db.prepare(deleteQuery);
+
+    stmt.run(params, function(err) {
+      if (err) {
+        console.error('❌ Clear database error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to clear records',
+          error: err.message
+        });
+      }
+
+      console.log(`✅ Cleared ${this.changes} records from database`);
+      res.json({
+        success: true,
+        message: `Cleared ${this.changes} records`,
+        deletedCount: this.changes
+      });
+    });
+
+    stmt.finalize();
+
+  } catch (error) {
+    console.error('❌ Clear database error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to clear records',
+      error: error.message
+    });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({

@@ -77,16 +77,6 @@
             </div>
           </div>
 
-          <div class="hash-info">
-            <h4>🔐 File Hash Storage</h4>
-            <p>Your file will be encrypted locally and its hash stored on the blockchain.</p>
-            <div class="storage-benefits">
-              <span>✅ Local file encryption</span>
-              <span>✅ Hash verification on blockchain</span>
-              <span>✅ Secure file integrity</span>
-            </div>
-          </div>
-
           <div class="mapping-info">
             <h4>🔗 Blockchain + Local Mapping</h4>
             <p>Hash will be <strong>minted on Flare blockchain</strong>, file stored locally encrypted.</p>
@@ -165,7 +155,7 @@
             <div class="info-grid">
               <div class="info-item">
                 <span class="label">Transaction Hash:</span>
-                <span class="value">{{ uploadResult.txHash }}</span>
+                <span class="value hash-display">{{ uploadResult.txHash }}</span>
                 <button @click="copyToClipboard(uploadResult.txHash)" class="copy-btn">📋</button>
               </div>
 
@@ -645,7 +635,7 @@ const uploadDocument = async () => {
     // Create success result with real blockchain transaction
     uploadResult.value = {
       success: true,
-      txHash: receipt.hash,
+      txHash: receipt.transactionHash,
       blockNumber: receipt.blockNumber,
       gasUsed: receipt.gasUsed.toString(),
       version,
@@ -692,6 +682,22 @@ const uploadDocument = async () => {
       const existingUploads = JSON.parse(localStorage.getItem('medicalVaultUploads') || '[]')
       existingUploads.push(uploadInfo)
       localStorage.setItem('medicalVaultUploads', JSON.stringify(existingUploads))
+
+      // Clear any cached data to ensure fresh downloads
+      console.log('🧹 Clearing caches after upload...')
+
+      // Clear browser caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys()
+        await Promise.all(cacheNames.map(name => caches.delete(name)))
+        console.log('✅ Browser caches cleared')
+      }
+
+      // Clear any component/service caches
+      if (window.mappingServiceCache) {
+        window.mappingServiceCache.clear()
+        console.log('✅ Mapping service cache cleared')
+      }
 
       uploadStatus.value = 'Transaction hash mapped to local file!'
 
@@ -1209,6 +1215,20 @@ textarea {
 .event-info p {
   margin: 0.25rem 0;
   font-size: 0.9rem;
+}
+
+.hash-display {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 10px;
+  border: 1px solid #bbdefb;
+  border-radius: 6px;
+  word-break: break-all;
+  display: inline-block;
+  max-width: 400px;
+  font-weight: 500;
 }
 
 @media (max-width: 768px) {

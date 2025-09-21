@@ -132,6 +132,59 @@ install_dependencies() {
     fi
 }
 
+# Start the mapping server
+start_mapping_server() {
+    if [ -f "$BACKEND_DIR/mapping-server-sqlite.js" ]; then
+        print_status "Starting Medical Vault mapping server..."
+
+        cd $BACKEND_DIR
+
+        # Check if port 3002 is already in use
+        if lsof -Pi :3002 -sTCP:LISTEN -t >/dev/null 2>&1; then
+            print_warning "Port 3002 is already in use!"
+            local pid=$(lsof -Pi :3002 -sTCP:LISTEN -t)
+            local process_name=$(ps -p $pid -o comm= 2>/dev/null || echo "unknown")
+
+            if [[ "$process_name" == *"node"* ]]; then
+                print_success "Mapping server already running on port 3002!"
+                cd ..
+                return 0
+            else
+                print_error "Port 3002 is occupied by: $process_name (PID: $pid)"
+                print_error "Please stop the process or use a different port."
+                exit 1
+            fi
+        fi
+
+        print_status "Starting mapping server..."
+
+        # Create logs directory if it doesn't exist
+        mkdir -p logs
+
+        # Start mapping server in the background
+        nohup node mapping-server-sqlite.js > logs/medical-vault-mapping-$(date +%Y-%m-%d).log 2>&1 &
+        local mapping_pid=$!
+
+        # Wait for the server to start
+        print_status "Waiting for mapping server to start..."
+        sleep 3
+
+        # Check if the server started successfully
+        if kill -0 $mapping_pid 2>/dev/null; then
+            print_success "Mapping server started successfully!"
+            print_success "🗄️  Medical Vault Mapping API: http://localhost:3002/"
+            echo $mapping_pid > ../medical-vault-mapping.pid
+        else
+            print_error "Failed to start mapping server!"
+            exit 1
+        fi
+
+        cd ..
+    else
+        print_status "No mapping server found, skipping..."
+    fi
+}
+
 # Start the backend if it exists
 start_backend() {
     if [ -f "$BACKEND_DIR/package.json" ]; then
@@ -249,6 +302,14 @@ show_startup_info() {
         echo
     fi
 
+    if [ -f "$BACKEND_DIR/mapping-server-sqlite.js" ]; then
+        echo "🗄️  Mapping Server (SQLite):"
+        echo "   🌐 URL: http://localhost:3002/"
+        echo "   📁 Database: $BACKEND_DIR/medical-vault-mappings.db"
+        echo "   📄 Logs: $BACKEND_DIR/logs/"
+        echo
+    fi
+
     echo "🔧 Configuration:"
     echo "   📝 Environment: $FRONTEND_DIR/.env"
     echo "   🏗️  Smart Contract: $(grep "VITE_VAULT_ADDRESS" $FRONTEND_DIR/.env | cut -d'=' -f2)"
@@ -272,6 +333,7 @@ show_startup_info() {
 wait_for_services() {
     local frontend_pid=""
     local backend_pid=""
+    local mapping_pid=""
 
     if [ -f "medical-vault-frontend.pid" ]; then
         frontend_pid=$(cat medical-vault-frontend.pid)
@@ -279,6 +341,10 @@ wait_for_services() {
 
     if [ -f "medical-vault-backend.pid" ]; then
         backend_pid=$(cat medical-vault-backend.pid)
+    fi
+
+    if [ -f "medical-vault-mapping.pid" ]; then
+        mapping_pid=$(cat medical-vault-mapping.pid)
     fi
 
     print_status "Monitoring services..."
@@ -295,6 +361,11 @@ wait_for_services() {
 
         # Check backend
         if [ -n "$backend_pid" ] && kill -0 $backend_pid 2>/dev/null; then
+            services_running=true
+        fi
+
+        # Check mapping server
+        if [ -n "$mapping_pid" ] && kill -0 $mapping_pid 2>/dev/null; then
             services_running=true
         fi
 
@@ -346,6 +417,23 @@ cleanup() {
         rm -f medical-vault-backend.pid
     fi
 
+    # Kill mapping server if running
+    if [ -f "medical-vault-mapping.pid" ]; then
+        local mapping_pid=$(cat medical-vault-mapping.pid)
+        if kill -0 $mapping_pid 2>/dev/null; then
+            print_status "Stopping mapping server (PID: $mapping_pid)..."
+            kill $mapping_pid 2>/dev/null || true
+            sleep 2
+
+            # Force kill if still running
+            if kill -0 $mapping_pid 2>/dev/null; then
+                print_warning "Force stopping mapping server..."
+                kill -9 $mapping_pid 2>/dev/null || true
+            fi
+        fi
+        rm -f medical-vault-mapping.pid
+    fi
+
     print_success "Medical Vault stopped successfully!"
     exit 0
 }
@@ -387,8 +475,14 @@ main() {
     install_dependencies
 
     # Start services
-    if [ "$FRONTEND_ONLY" = false ] && [ -f "$BACKEND_DIR/package.json" ]; then
-        start_backend
+    if [ "$FRONTEND_ONLY" = false ]; then
+        # Start mapping server first (it's needed by the frontend)
+        start_mapping_server
+
+        # Start backend if it exists
+        if [ -f "$BACKEND_DIR/package.json" ]; then
+            start_backend
+        fi
     fi
 
     start_frontend

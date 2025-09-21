@@ -33,9 +33,17 @@ interface MappingResponse {
 
 class MappingService {
   private baseUrl: string
+  private cache: Map<string, any> = new Map()
 
   constructor(baseUrl: string = 'http://localhost:3002/api') {
     this.baseUrl = baseUrl
+    // Expose cache clearing globally for easier access
+    window.mappingServiceCache = this.cache
+  }
+
+  clearCache(): void {
+    console.log('🧹 Clearing mapping service cache...')
+    this.cache.clear()
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -119,6 +127,77 @@ class MappingService {
       return mapping
     } catch (error) {
       console.error('❌ Failed to fetch mapping by tx hash:', error)
+      throw error
+    }
+  }
+
+  async getMappingByPatientAndType(patientId: string, docType: number): Promise<DocumentMapping | null> {
+    console.log(`🔄 Fetching mapping for patient ${patientId}, type ${docType}`)
+
+    try {
+      const response = await this.request<MappingResponse>(
+        `/mappings/patient/${patientId}/type/${docType}`
+      )
+
+      if (!response.success) {
+        if (response.message?.includes('not found')) {
+          console.log('ℹ️ Mapping not found for patient and type')
+          return null
+        }
+        throw new Error(response.message || 'Failed to fetch mapping')
+      }
+
+      const mapping = response.data as DocumentMapping
+      console.log('✅ Retrieved mapping for patient and type:', mapping)
+      return mapping
+    } catch (error) {
+      console.error('❌ Failed to fetch mapping by patient and type:', error)
+      // Return null instead of throwing for optional data
+      return null
+    }
+  }
+
+  async deleteMappingByTxHash(txHash: string): Promise<boolean> {
+    console.log(`🗑️ Deleting mapping for transaction: ${txHash}`)
+
+    try {
+      const response = await this.request<MappingResponse>(`/mappings/tx/${txHash}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.success) {
+        if (response.message?.includes('not found')) {
+          console.log('ℹ️ Mapping not found for deletion')
+          return false
+        }
+        throw new Error(response.message || 'Failed to delete mapping')
+      }
+
+      console.log('✅ Mapping deleted successfully')
+      return true
+    } catch (error) {
+      console.error('❌ Failed to delete mapping:', error)
+      throw error
+    }
+  }
+
+  async clearMappingsByWallet(walletAddress: string): Promise<number> {
+    console.log(`🗑️ Clearing all mappings for wallet: ${walletAddress}`)
+
+    try {
+      const response = await this.request<MappingResponse & { deletedCount: number }>(`/mappings/wallet/${walletAddress}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to clear mappings')
+      }
+
+      const deletedCount = response.deletedCount || 0
+      console.log(`✅ Cleared ${deletedCount} mappings for wallet`)
+      return deletedCount
+    } catch (error) {
+      console.error('❌ Failed to clear wallet mappings:', error)
       throw error
     }
   }

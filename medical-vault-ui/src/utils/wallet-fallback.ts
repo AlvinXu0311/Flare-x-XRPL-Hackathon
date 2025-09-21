@@ -159,7 +159,32 @@ export async function createContractInterface(ethereum: any, contractAddress: st
       console.log('All event listeners removed (basic interface)')
     }
 
-    console.log('✅ Enhanced contract interface created with dynamic methods')
+    // Add callStatic support to mimic ethers.js behavior
+    const callStaticProxy = new Proxy({}, {
+      get(target, prop) {
+        if (typeof prop === 'string') {
+          // Find the method in ABI to ensure it's a view function
+          const methodAbi = abi.find(item =>
+            item.type === 'function' &&
+            item.name === prop &&
+            (item.stateMutability === 'view' || item.stateMutability === 'pure' || item.constant === true)
+          )
+
+          if (methodAbi) {
+            // Return a function that calls the contract method
+            return async (...args: any[]) => {
+              console.log(`callStatic.${prop} called with args:`, args)
+              return await contractInterface.call(prop, args.filter(arg => arg !== undefined))
+            }
+          }
+        }
+        return undefined
+      }
+    })
+
+    ;(contractInterface as any).callStatic = callStaticProxy
+
+    console.log('✅ Enhanced contract interface created with dynamic methods and callStatic support')
     return contractInterface
 
   } catch (error) {

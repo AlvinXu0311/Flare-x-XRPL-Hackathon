@@ -1,0 +1,13 @@
+✅ Database table initialized
+🚀 Document Mapping API server running on port 3002
+📊 SQLite database ready at /usr/Flare-x-XRPL-Hackathon/medical-vault-backend/medical-vault-mappings.db
+🔗 API endpoints:
+   POST /api/mappings - Store mapping
+   GET  /api/mappings/wallet/:address - Get by wallet
+   GET  /api/mappings/tx/:hash - Get by transaction
+   GET  /api/health - Health check
+✅ Document mapping stored: 0x376a9eec3907c622f98e1e6888cab6d5160275c7fff93330b13aa5e25e1da74b -> System-design.docx
+Deleted mapping for transaction: 0x376a9eec3907c622f98e1e6888cab6d5160275c7fff93330b13aa5e25e1da74b
+Cleared 9 mappings for wallet: 0x0457a4aaffa8051f20aa37ad179d4b9c09f223a7
+🛑 Shutting down gracefully...
+✅ Database connection closed

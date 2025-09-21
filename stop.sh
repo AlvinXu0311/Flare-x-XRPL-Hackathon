@@ -117,6 +117,50 @@ stop_backend() {
     fi
 }
 
+# Stop mapping server service
+stop_mapping_server() {
+    print_status "Stopping Medical Vault mapping server..."
+
+    # Check for PID file
+    if [ -f "medical-vault-mapping.pid" ]; then
+        local pid=$(cat medical-vault-mapping.pid)
+        if kill -0 $pid 2>/dev/null; then
+            print_status "Stopping mapping server process (PID: $pid)..."
+            kill $pid
+            sleep 3
+
+            # Check if still running
+            if kill -0 $pid 2>/dev/null; then
+                print_warning "Process still running, force killing..."
+                kill -9 $pid
+            fi
+
+            print_success "Mapping server stopped!"
+        else
+            print_warning "Mapping server process not running"
+        fi
+        rm -f medical-vault-mapping.pid
+    fi
+
+    # Kill any remaining processes on port 3002
+    local mapping_pids=$(lsof -Pi :3002 -sTCP:LISTEN -t 2>/dev/null || echo "")
+    if [ -n "$mapping_pids" ]; then
+        print_status "Killing remaining processes on port 3002..."
+        for pid in $mapping_pids; do
+            kill $pid 2>/dev/null || true
+        done
+        sleep 2
+
+        # Force kill if needed
+        mapping_pids=$(lsof -Pi :3002 -sTCP:LISTEN -t 2>/dev/null || echo "")
+        if [ -n "$mapping_pids" ]; then
+            for pid in $mapping_pids; do
+                kill -9 $pid 2>/dev/null || true
+            done
+        fi
+    fi
+}
+
 # Stop any additional Medical Vault processes
 stop_additional_processes() {
     print_status "Stopping any additional Medical Vault processes..."
@@ -176,6 +220,15 @@ check_status() {
         fi
     fi
 
+    # Check mapping server
+    if [ -f "medical-vault-mapping.pid" ]; then
+        local pid=$(cat medical-vault-mapping.pid)
+        if kill -0 $pid 2>/dev/null; then
+            print_status "Mapping server still running (PID: $pid)"
+            any_running=true
+        fi
+    fi
+
     # Check ports
     if lsof -Pi :5173 -sTCP:LISTEN -t >/dev/null 2>&1; then
         local pid=$(lsof -Pi :5173 -sTCP:LISTEN -t)
@@ -186,6 +239,12 @@ check_status() {
     if lsof -Pi :3001 -sTCP:LISTEN -t >/dev/null 2>&1; then
         local pid=$(lsof -Pi :3001 -sTCP:LISTEN -t)
         print_status "Port 3001 still in use (PID: $pid)"
+        any_running=true
+    fi
+
+    if lsof -Pi :3002 -sTCP:LISTEN -t >/dev/null 2>&1; then
+        local pid=$(lsof -Pi :3002 -sTCP:LISTEN -t)
+        print_status "Port 3002 still in use (PID: $pid)"
         any_running=true
     fi
 
@@ -211,6 +270,11 @@ cleanup_files() {
 
     if [ -f "medical-vault-backend.pid" ]; then
         rm -f medical-vault-backend.pid
+        cleaned=true
+    fi
+
+    if [ -f "medical-vault-mapping.pid" ]; then
+        rm -f medical-vault-mapping.pid
         cleaned=true
     fi
 
@@ -284,6 +348,7 @@ main() {
     # Stop services
     stop_frontend
     stop_backend
+    stop_mapping_server
     stop_additional_processes
 
     # Force kill if requested
